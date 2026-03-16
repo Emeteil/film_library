@@ -1,0 +1,18 @@
+add_executable(film_library_tests
+    main_test.cpp
+    test_avl_tree.cpp
+    test_quick_sort.cpp
+    test_binary_search.cpp
+    test_rabin_karp.cpp
+    test_csv_parser.cpp
+)
+
+target_link_libraries(film_library_tests PRIVATE
+    film_library_core
+)
+
+target_include_directories(film_library_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+add_test(NAME FilmLibraryTests COMMAND film_library_tests)
