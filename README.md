@@ -114,27 +114,27 @@
 ```c
 struct Movie
 {
-    int id;                     // Уникальный ID (автоинкремент, сохраняется в CSV).
+    int id; // Уникальный ID (автоинкремент, сохраняется в CSV).
     std::string title;
     std::string studio;
     std::string description;
     int year;
-    int length;                 // Длительность в секундах.
+    int length; // Длительность в секундах.
     double rating;
-    std::string cover;          // Путь к файлу обложки или ссылка (опционально).
-    std::string streamLink;     // Ссылка на hls ссылку или путь к файлу (опционально).
-    std::vector<std::string> genres;   // Список жанров фильма.
-    std::vector<int> actorIds;         // ID актёров из таблицы Actor.
+    std::string cover; // Путь к файлу обложки или ссылка (опционально).
+    std::string streamLink; // Ссылка на hls ссылку или путь к файлу (опционально).
+    std::vector<std::string> genres; // Список жанров фильма.
+    std::vector<int> actorIds; // ID актёров из таблицы Actor.
 };
 
 struct Actor
 {
-    int id;                     // Уникальный ID (автоинкремент, сохраняется в CSV).
-    std::string name;           // Имя (ФИО).
-    std::string description;    // Описание.
-    long int birthdate;         // UNIX timestamp.
-    std::set<int> filmIds;      // Уникальные идентификаторы фильмов.
-    std::string photo;          // Явный путь либо ссылка на фотографию.
+    int id; // Уникальный ID (автоинкремент, сохраняется в CSV).
+    std::string name; // Имя (ФИО).
+    std::string description; // Описание.
+    long int birthdate; // UNIX timestamp.
+    std::set<int> filmIds; // Уникальные идентификаторы фильмов.
+    std::string photo; // Явный путь либо ссылка на фотографию.
 };
 
 // Основное хранилище фильмов (единственный владелец объектов Movie)
@@ -322,11 +322,3 @@ graph TD
     - **Функции и методы:** именуются в стиле `UpperCamelCase` (например, `FindByTitle`, `LoadFromCsv`).
     - **Классы и структуры:** также именуются в стиле `UpperCamelCase` (например, `OptimalBST`, `Movie`).
     - **Константы и макросы:** именуются в стиле `UPPER_SNAKE_CASE` (например, `MAX_STRING_LENGTH`).
-
----
-
-## 11. Open Questions (Вопросы)
-
-- Что лучше использовать в качестве GUI библиотеки: Dear ImGui, Sciter UI или QT?
-- Какой именно алгоритм выбора опорного элемента будет использован в быстрой сортировке для избежания деградации до O(n^2) на почти отсортированных данных?
-- Требуется ли функциональность экспорта результатов поиска/фильтрации в отдельный файл?
