@@ -1,6 +1,6 @@
 add_executable(film_library_tests
     main_test.cpp
-    test_avl_tree.cpp
+    test_optimal_bst.cpp
     test_quick_sort.cpp
     test_binary_search.cpp
     test_rabin_karp.cpp

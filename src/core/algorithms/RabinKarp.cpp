@@ -2,39 +2,45 @@
 /// @brief Реализация алгоритма Рабина-Карпа для полнотекстового поиска.
 
 #include "core/algorithms/RabinKarp.h"
+#include <functional>
 
 namespace FilmLibrary
 {
     std::vector<std::size_t> RabinKarp::Search(const std::string& text, const std::string& pattern)
     {
-        // TODO: Реализовать алгоритм Рабина-Карпа.
-        //
-        // Алгоритм:
-        // 1. Вычислить хэш паттерна.
-        // 2. Вычислить хэш первого окна текста длиной pattern.size().
-        // 3. Скользящим окном двигаться по тексту:
-        //    a. Если хэши совпали - сравнить строки посимвольно (защита от коллизий).
-        //    b. Пересчитать хэш окна за O(1) с помощью rolling hash.
-        // 4. Собрать все позиции совпадений.
-
         std::vector<std::size_t> result;
-        (void)text;
-        (void)pattern;
+        
+        if (pattern.empty() || text.length() < pattern.length())
+            return result;
+
+        std::size_t n = text.length();
+        std::size_t m = pattern.length();
+        std::size_t patternHash = ComputeHash(pattern, 0, m);
+
+        for (std::size_t i = 0; i <= n - m; i++)
+        {
+            if (ComputeHash(text, i, m) == patternHash)
+            {
+                if (text.compare(i, m, pattern) == 0)
+                    result.push_back(i);
+            }
+        }
+
         return result;
     }
 
     bool RabinKarp::Contains(const std::string& text, const std::string& pattern)
     {
-        // TODO: Использовать Search() и проверить наличие хотя бы одного результата.
+        if (pattern.empty())
+            return true;
+        if (text.length() < pattern.length())
+            return false;
+        
         return !Search(text, pattern).empty();
     }
 
     std::size_t RabinKarp::ComputeHash(const std::string& str, std::size_t start, std::size_t length)
     {
-        // TODO: Реализовать вычисление хэша.
-        (void)str;
-        (void)start;
-        (void)length;
-        return 0;
+        return std::hash<std::string>{}(str.substr(start, length));
     }
 }

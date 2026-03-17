@@ -1,12 +1,13 @@
 #pragma once
 
 /// @file AppController.h
-/// @brief Контроллер приложения - связующее звено между GUI и DataManager.
+/// @brief Контроллер приложения - связующее звено между GUI и менеджерами данных.
 ///
 /// Обрабатывает пользовательские действия (коллбэки GUI), делегирует
-/// операции DataManager и возвращает данные для отображения.
+/// операции DataManager / ActorManager и возвращает данные для отображения.
 
 #include "core/DataManager.h"
+#include "core/ActorManager.h"
 
 #include <string>
 #include <vector>
@@ -16,8 +17,9 @@ namespace FilmLibrary
     class AppController
     {
         public:
-            /// @param csvFilePath  Путь к CSV-файлу с данными.
-            AppController(const std::string& csvFilePath);
+            /// @param moviesCsvPath  Путь к CSV-файлу фильмов.
+            /// @param actorsCsvPath  Путь к CSV-файлу актёров.
+            AppController(const std::string& moviesCsvPath, const std::string& actorsCsvPath);
             ~AppController();
 
             AppController(const AppController&) = delete;
@@ -27,9 +29,8 @@ namespace FilmLibrary
             /// @return Список ошибок парсинга (может быть пустым).
             std::vector<std::string> Initialize();
 
-            /// @brief Сохранить данные при выходе.
-            /// @return true при успехе.
-            bool Shutdown();
+            /// @brief Завершить работу контроллера (ресурсы освобождаются).
+            void Shutdown();
 
             int AddMovie(Movie movieData);
             bool UpdateMovie(int id, const Movie& updatedData);
@@ -37,12 +38,15 @@ namespace FilmLibrary
             const Movie* GetMovieById(int id) const;
 
             /// @brief Получить текущий список фильмов для отображения в таблице.
-            ///
-            /// Возвращает вектор сырых указателей. Если активна сортировка или
-            /// поиск - возвращает отфильтрованный/отсортированный набор.
             const std::vector<Movie*>& GetDisplayMovies();
 
             std::size_t GetMovieCount() const;
+
+            /// @brief Получить актёра по ID.
+            const Actor* GetActorById(int id) const;
+
+            /// @brief Получить всех актёров.
+            const std::vector<std::unique_ptr<Actor>>& GetAllActors() const;
 
             /// @brief Режим поиска.
             enum class SearchMode
@@ -51,6 +55,7 @@ namespace FilmLibrary
                 ByStudio,
                 ByYear,
                 ByDescription,
+                ByGenre,
                 None
             };
 
@@ -78,7 +83,9 @@ namespace FilmLibrary
 
         private:
             DataManager dataManager;
-            std::string csvFilePath;
+            ActorManager actorManager;
+            std::string moviesCsvPath;
+            std::string actorsCsvPath;
 
             std::vector<Movie*> displayMovies;
             bool displayDirty = true;

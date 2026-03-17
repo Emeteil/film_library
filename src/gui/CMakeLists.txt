@@ -2,6 +2,7 @@ add_library(film_library_gui STATIC
     AppWindow.cpp
     AppController.cpp
 
+    widgets/MainWidget.cpp
     widgets/MovieTableWidget.cpp
     widgets/SearchPanel.cpp
     widgets/MovieFormDialog.cpp

@@ -30,8 +30,8 @@ namespace FilmLibrary
         // 1. ImGui::OpenPopup(dialogTitle.c_str()).
         // 2. ImGui::BeginPopupModal(dialogTitle.c_str()).
         // 3. ImGui::Text(dialogMessage).
-        // 4. Кнопка «Да» → onConfirm(), isOpen = false.
-        // 5. Кнопка «Нет» → isOpen = false.
+        // 4. Кнопка "Да" → onConfirm(), isOpen = false.
+        // 5. Кнопка "Нет" → isOpen = false.
         // 6. ImGui::EndPopup().
     }
 

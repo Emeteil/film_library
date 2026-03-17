@@ -2,11 +2,14 @@
 /// @brief Реализация контроллера приложения.
 
 #include "gui/AppController.h"
+#include "gui/widgets/NotificationManager.h"
 #include "core/utils/Logger.h"
 
 namespace FilmLibrary
 {
-    AppController::AppController(const std::string& csvFilePath) : csvFilePath(csvFilePath)
+    AppController::AppController(const std::string& moviesCsvPath, const std::string& actorsCsvPath)
+        : moviesCsvPath(moviesCsvPath)
+        , actorsCsvPath(actorsCsvPath)
     {
     }
 
@@ -14,14 +17,25 @@ namespace FilmLibrary
 
     std::vector<std::string> AppController::Initialize()
     {
-        // TODO: Загрузить данные из CSV через dataManager.
-        return dataManager.LoadFromCsv(csvFilePath);
+        // TODO: Реализовать инициализацию.
+        //
+        // 1. dataManager.LoadFromCsv(moviesCsvPath).
+        // 2. actorManager.LoadFromCsv(actorsCsvPath).
+        // 3. Собрать и вернуть все ошибки.
+
+        std::vector<std::string> errors;
+        auto movieErrors = dataManager.LoadFromCsv(moviesCsvPath);
+        auto actorErrors = actorManager.LoadFromCsv(actorsCsvPath);
+
+        errors.insert(errors.end(), movieErrors.begin(), movieErrors.end());
+        errors.insert(errors.end(), actorErrors.begin(), actorErrors.end());
+        return errors;
     }
 
-    bool AppController::Shutdown()
+    void AppController::Shutdown()
     {
-        // TODO: Сохранить данные в CSV.
-        return dataManager.SaveToCsv(csvFilePath);
+        // Данные уже сохранены автоматически при каждом изменении.
+        Logger::Instance().Info("Контроллер завершает работу.");
     }
 
     int AppController::AddMovie(Movie movieData)
@@ -33,22 +47,16 @@ namespace FilmLibrary
 
     bool AppController::UpdateMovie(int id, const Movie& updatedData)
     {
-        bool result = dataManager.UpdateMovie(id, updatedData);
-        if (result)
-        {
-            displayDirty = true;
-        }
-        return result;
+        bool ok = dataManager.UpdateMovie(id, updatedData);
+        if (ok) displayDirty = true;
+        return ok;
     }
 
     bool AppController::DeleteMovie(int id)
     {
-        bool result = dataManager.DeleteMovie(id);
-        if (result)
-        {
-            displayDirty = true;
-        }
-        return result;
+        bool ok = dataManager.DeleteMovie(id);
+        if (ok) displayDirty = true;
+        return ok;
     }
 
     const Movie* AppController::GetMovieById(int id) const
@@ -71,6 +79,16 @@ namespace FilmLibrary
         return dataManager.GetMovieCount();
     }
 
+    const Actor* AppController::GetActorById(int id) const
+    {
+        return actorManager.GetActorById(id);
+    }
+
+    const std::vector<std::unique_ptr<Actor>>& AppController::GetAllActors() const
+    {
+        return actorManager.GetAllActors();
+    }
+
     void AppController::PerformSearch(SearchMode mode, const std::string& query)
     {
         currentSearchMode = mode;
@@ -87,7 +105,7 @@ namespace FilmLibrary
 
     void AppController::FilterByRatingRange(double low, double high)
     {
-        // TODO: Сохранить параметры фильтра, пометить displayDirty.
+        // TODO: Сохранить параметры фильтра и пометить displayDirty.
         (void)low;
         (void)high;
         displayDirty = true;
@@ -95,7 +113,7 @@ namespace FilmLibrary
 
     void AppController::FilterByLengthRange(int low, int high)
     {
-        // TODO: Сохранить параметры фильтра, пометить displayDirty.
+        // TODO: Сохранить параметры фильтра и пометить displayDirty.
         (void)low;
         (void)high;
         displayDirty = true;
@@ -121,13 +139,18 @@ namespace FilmLibrary
 
     void AppController::RefreshDisplayList()
     {
-        // TODO: Реализовать сборку displayMovies.
+        // TODO: Реализовать построение displayMovies на основе:
         //
-        // 1. Если активен поиск - получить результаты через dataManager.
-        // 2. Если активен фильтр - пересечь с результатами фильтрации.
-        // 3. Если активна сортировка - использовать отсортированный вектор.
-        // 4. Иначе - показать все фильмы.
-        //
-        // displayMovies = ...;
+        // 1. Текущего поискового режима (currentSearchMode + currentSearchQuery).
+        // 2. Текущих фильтров (рейтинг, длительность).
+        // 3. Текущей сортировки (currentSortKey + currentSortAscending).
+
+        displayMovies.clear();
+
+        const auto& allMovies = dataManager.GetAllMovies();
+        for (const auto& m : allMovies)
+        {
+            displayMovies.push_back(m.get());
+        }
     }
 }

@@ -1,11 +1,11 @@
 #pragma once
 
 /// @file DataManager.h
-/// @brief Центральный менеджер данных - единая точка входа для CRUD-операций,
+/// @brief Центральный менеджер данных фильмов - единая точка входа для CRUD-операций,
 ///        поиска и сортировки фильмов.
 ///
 /// Владеет вектором std::unique_ptr<Movie>, управляет IndexManager и SortCache.
-/// Это «ядро» бэкенда приложения.
+/// Автоматически сохраняет данные в CSV при каждом изменении.
 
 #include "core/index/IndexManager.h"
 #include "core/index/SortCache.h"
@@ -32,9 +32,8 @@ namespace FilmLibrary
             std::vector<std::string> LoadFromCsv(const std::string& filePath);
 
             /// @brief Сохранить данные в CSV-файл.
-            /// @param filePath  Путь к CSV-файлу.
             /// @return true при успехе.
-            bool SaveToCsv(const std::string& filePath) const;
+            bool SaveToCsv() const;
 
             /// @brief Добавить новый фильм. ID назначается автоматически.
             /// @return ID добавленного фильма.
@@ -64,6 +63,7 @@ namespace FilmLibrary
             std::vector<Movie*> FilterByRatingRange(double low, double high) const;
             std::vector<Movie*> FilterByLengthRange(int low, int high) const;
             std::vector<Movie*> SearchByDescription(const std::string& pattern) const;
+            std::vector<Movie*> FilterByGenre(const std::string& genre) const;
 
             /// @brief Получить фильмы, отсортированные по рейтингу.
             /// @param ascending  true - по возрастанию, false - по убыванию.
@@ -80,8 +80,9 @@ namespace FilmLibrary
             IndexManager indexManager;
             SortCache sortCache;
             int nextId = 1;
+            std::string csvFilePath;
 
-            /// @brief Перестроить все индексы и сбросить кэш сортировки.
+            /// @brief Перестроить все индексы, сбросить кэш и авто-сохранить.
             void OnDataChanged();
     };
 }

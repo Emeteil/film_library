@@ -1,12 +1,11 @@
 #pragma once
 
 /// @file CsvParser.h
-/// @brief Парсер и генератор CSV-файлов для сериализации данных о фильмах.
+/// @brief Обобщённый парсер и генератор CSV-файлов.
 ///
-/// Поддерживает экранирование полей (кавычки, запятые, переносы строк).
-/// Не зависит от сторонних библиотек.
-
-#include "core/models/Movie.h"
+/// Предоставляет общую утилитарную логику для работы с CSV:
+/// разбор строк, экранирование полей. Специфика каждой таблицы
+/// (Movie, Actor) реализуется в соответствующих Mapper-классах.
 
 #include <memory>
 #include <string>
@@ -14,42 +13,40 @@
 
 namespace FilmLibrary
 {
-    /// @brief Результат парсинга: список фильмов + список ошибок.
+    /// @brief Обобщённый результат парсинга CSV.
+    /// @tparam T Тип записи (Movie, Actor и т.д.).
+    template <typename T>
     struct CsvParseResult
     {
-        std::vector<std::unique_ptr<Movie>> movies;
-        std::vector<std::string> errors; ///< Описание ошибочных строк.
+        std::vector<std::unique_ptr<T>> records;
+        std::vector<std::string> errors;
     };
 
-    /// @brief Класс для чтения и записи CSV-файлов с данными о фильмах.
+    /// @brief Утилитарный класс для работы с CSV-файлами.
     class CsvParser
     {
         public:
-            /// @brief Загрузить фильмы из CSV-файла.
-            /// @param filePath Путь к CSV-файлу.
-            /// @return Результат парсинга с фильмами и ошибками.
-            static CsvParseResult LoadFromFile(const std::string& filePath);
-
-            /// @brief Сохранить фильмы в CSV-файл.
-            /// @param filePath  Путь к CSV-файлу (будет перезаписан).
-            /// @param movies    Вектор unique_ptr на фильмы.
-            /// @return true при успехе, false при ошибке записи.
-            static bool SaveToFile(const std::string& filePath, const std::vector<std::unique_ptr<Movie>>& movies);
-
-        private:
-            /// @brief Разобрать одну строку CSV и создать объект Movie.
-            /// @param line        Строка CSV.
-            /// @param lineNumber  Номер строки (для диагностики).
-            /// @return unique_ptr на Movie или nullptr при ошибке.
-            static std::unique_ptr<Movie> ParseLine(const std::string& line, int lineNumber);
-
             /// @brief Разбить CSV-строку на поля с учётом экранирования.
             static std::vector<std::string> SplitCsvLine(const std::string& line);
 
             /// @brief Экранировать поле для записи в CSV.
             static std::string EscapeField(const std::string& field);
 
-            /// @brief Сериализовать объект Movie в CSV-строку.
-            static std::string MovieToCsvLine(const Movie& movie);
+            /// @brief Загрузить записи из CSV, используя mapper для преобразования.
+            ///
+            /// @tparam T       Тип записи.
+            /// @tparam Mapper  Класс с методами:
+            ///                 - static std::string Header()
+            ///                 - static std::unique_ptr<T> FromFields(const std::vector<std::string>&, int lineNum)
+            ///                 - static std::string ToLine(const T&)
+            ///
+            /// @param filePath Путь к CSV-файлу.
+            /// @return Результат парсинга с записями и ошибками.
+            template <typename T, typename Mapper>
+            static CsvParseResult<T> LoadFromFile(const std::string& filePath);
+
+            /// @brief Сохранить записи в CSV, используя mapper для сериализации.
+            template <typename T, typename Mapper>
+            static bool SaveToFile(const std::string& filePath, const std::vector<std::unique_ptr<T>>& records);
     };
 }

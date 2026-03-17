@@ -31,6 +31,16 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.h")
 
     find_package(OpenGL REQUIRED)
     target_link_libraries(imgui PUBLIC OpenGL::GL)
+
+    set(IMGUI_EXT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/imgui_extensions")
+    if(EXISTS "${IMGUI_EXT_DIR}/ImAnim/im_anim.cpp")
+        target_sources(imgui PRIVATE
+            ${IMGUI_EXT_DIR}/ImAnim/im_anim.cpp
+        )
+        target_include_directories(imgui PUBLIC
+            ${IMGUI_EXT_DIR}/ImAnim
+        )
+    endif()
 else()
     message(WARNING "Run: git submodule update --init --recursive")
 endif()

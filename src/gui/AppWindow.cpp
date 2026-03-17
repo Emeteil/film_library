@@ -2,11 +2,7 @@
 /// @brief Реализация главного окна приложения (GLFW + Dear ImGui).
 
 #include "gui/AppWindow.h"
-#include "gui/widgets/MovieTableWidget.h"
-#include "gui/widgets/SearchPanel.h"
-#include "gui/widgets/MovieFormDialog.h"
-#include "gui/widgets/ConfirmDialog.h"
-#include "gui/widgets/NotificationManager.h"
+#include "gui/widgets/MainWidget.h"
 #include "core/utils/Logger.h"
 
 #include <imgui.h>
@@ -27,67 +23,155 @@ namespace FilmLibrary
 
     bool AppWindow::Init()
     {
-        // TODO: Реализовать инициализацию.
-        //
-        // 1. glfwInit()
-        // 2. Задать GLFW window hints (OpenGL 3.3 Core).
-        // 3. glfwCreateWindow(width, height, title, nullptr, nullptr).
-        // 4. glfwMakeContextCurrent(window).
-        // 5. glfwSwapInterval(1) - vsync.
-        // 6. ImGui::CreateContext().
-        // 7. ImGui_ImplGlfw_InitForOpenGL(window, true).
-        // 8. ImGui_ImplOpenGL3_Init("#version 330").
-        // 9. SetupImGuiStyle().
-        // 10. Вернуть true при успехе.
+        if (!glfwInit())
+        {
+            Logger::Instance().Error("Не удалось инициализировать GLFW");
+            return false;
+        }
 
-        return false;
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        
+#ifdef __APPLE__
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+        window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        if (!window)
+        {
+            Logger::Instance().Error("Не удалось создать окно GLFW");
+            glfwTerminate();
+            return false;
+        }
+
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 330");
+
+        SetupImGuiStyle();
+
+        Logger::Instance().Info("GUI инициализировано");
+        return true;
     }
 
     void AppWindow::Run(AppController& controller)
     {
-        // TODO: Реализовать главный цикл отрисовки.
-        //
-        // while (!glfwWindowShouldClose(window))
-        // {
-        //     glfwPollEvents();
-        //     ImGui_ImplOpenGL3_NewFrame();
-        //     ImGui_ImplGlfw_NewFrame();
-        //     ImGui::NewFrame();
-        //
-        //     // --- Отрисовка UI ---
-        //     // SearchPanel::Render(controller)
-        //     // MovieTableWidget::Render(controller.GetDisplayMovies())
-        //     // CRUD-кнопки (Добавить, Редактировать, Удалить)
-        //     // MovieFormDialog::Render()
-        //     // ConfirmDialog::Render()
-        //     // NotificationManager::Instance().Render()
-        //
-        //     ImGui::Render();
-        //     glClear(GL_COLOR_BUFFER_BIT);
-        //     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        //     glfwSwapBuffers(window);
-        // }
+        MainWidget mainWidget;
 
-        (void)controller;
+        while (!glfwWindowShouldClose(window))
+        {
+            glfwPollEvents();
+
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            mainWidget.Render(controller, window);
+
+            ImGui::Render();
+            int display_w, display_h;
+            glfwGetFramebufferSize(window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
+            glClear(0x00004000); // GL_COLOR_BUFFER_BIT
+            
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            glfwSwapBuffers(window);
+        }
     }
 
     void AppWindow::Shutdown()
     {
-        // TODO: Реализовать очистку.
-        //
-        // ImGui_ImplOpenGL3_Shutdown();
-        // ImGui_ImplGlfw_Shutdown();
-        // ImGui::DestroyContext();
-        // glfwDestroyWindow(window);
-        // glfwTerminate();
+        if (!window)
+            return;
+        
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+
+        glfwDestroyWindow(window);
+        window = nullptr;
+        glfwTerminate();
+        Logger::Instance().Info("GUI остановлен");
     }
 
     void AppWindow::SetupImGuiStyle()
     {
-        // TODO: Настроить тёмную тему Dear ImGui.
-        //
-        // ImGuiStyle& style = ImGui::GetStyle();
-        // ImGui::StyleColorsDark();
-        // Настроить рамки, отступы, цвета под дизайн приложения.
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        ImGui::StyleColorsDark();
+
+        style.WindowRounding = 8.0f;
+        style.FrameRounding = 6.0f;
+        style.PopupRounding = 8.0f;
+        style.ScrollbarRounding = 12.0f;
+        style.GrabRounding = 6.0f;
+        style.TabRounding = 6.0f;
+        style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
+        style.FramePadding = ImVec2(8, 6);
+        style.ItemSpacing = ImVec2(10, 10);
+
+        colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
+        colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+        colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_PopupBg] = ImVec4(0.14f, 0.14f, 0.16f, 0.98f);
+        colors[ImGuiCol_Border] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+        colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
+        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.24f, 0.28f, 1.00f);
+        colors[ImGuiCol_FrameBgActive] = ImVec4(0.28f, 0.28f, 0.32f, 1.00f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.08f, 0.08f, 0.10f, 1.00f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.10f, 0.10f, 0.12f, 1.00f);
+        colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+        colors[ImGuiCol_ScrollbarBg] = ImVec4(0.05f, 0.05f, 0.05f, 0.50f);
+        colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
+        colors[ImGuiCol_CheckMark] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_Button] = ImVec4(0.20f, 0.20f, 0.24f, 1.00f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.28f, 0.45f, 0.70f, 1.00f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.25f, 0.40f, 0.65f, 1.00f);
+        colors[ImGuiCol_Header] = ImVec4(0.20f, 0.20f, 0.24f, 1.00f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_Separator] = colors[ImGuiCol_Border];
+        colors[ImGuiCol_SeparatorHovered] = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
+        colors[ImGuiCol_SeparatorActive] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+        colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
+        colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+        colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+        colors[ImGuiCol_Tab] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
+        colors[ImGuiCol_TabHovered] = colors[ImGuiCol_HeaderHovered];
+        colors[ImGuiCol_TabActive] = colors[ImGuiCol_HeaderActive];
+        colors[ImGuiCol_TabUnfocused] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+        colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.14f, 0.14f, 0.16f, 1.00f);
+        colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+        colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+        colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+        colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+        colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+        colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
+        colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
+        colors[ImGuiCol_TableRowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+        colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+        colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+        colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+        colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+        colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
     }
 }

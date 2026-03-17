@@ -5,44 +5,78 @@
 #include "core/algorithms/RabinKarp.h"
 
 #include <string>
+#include <vector>
 
-// TODO: Реализовать тесты после имплементации RabinKarp.
+using namespace FilmLibrary;
 
 TEST(RabinKarp_SimpleMatch)
 {
-    // TODO: Поиск простого паттерна в тексте.
-    //       Проверить, что найдена корректная позиция.
+    std::string text = "Ak3j7jds4testkghgj";
+    std::string pattern = "test";
+    
+    auto result = RabinKarp::Search(text, pattern);
+    
+    ASSERT_EQ(result.size(), 1);
+    ASSERT_EQ(result[0], 9);
 }
 
 TEST(RabinKarp_MultipleMatches)
 {
-    // TODO: Текст с несколькими вхождениями паттерна.
-    //       Проверить, что все позиции найдены.
+    std::string text = "abababa";
+    std::string pattern = "aba";
+    
+    auto result = RabinKarp::Search(text, pattern);
+    
+    ASSERT_EQ(result.size(), 3);
+    ASSERT_EQ(result[0], 0);
+    ASSERT_EQ(result[1], 2);
+    ASSERT_EQ(result[2], 4);
 }
 
 TEST(RabinKarp_NoMatch)
 {
-    // TODO: Паттерн отсутствует в тексте.
-    //       Проверить, что результат пустой.
+    std::string text = "Hello World";
+    std::string pattern = "xyz";
+    
+    auto result = RabinKarp::Search(text, pattern);
+    
+    ASSERT_TRUE(result.empty());
 }
 
 TEST(RabinKarp_EmptyPattern)
 {
-    // TODO: Пустой паттерн - определить ожидаемое поведение.
+    std::string text = "Empty pattern test";
+    std::string pattern = "";
+    
+    auto result = RabinKarp::Search(text, pattern);
+    ASSERT_TRUE(result.empty());
 }
 
 TEST(RabinKarp_PatternLongerThanText)
 {
-    // TODO: Паттерн длиннее текста - результат пустой.
+    std::string text = "Short";
+    std::string pattern = "Longer than text";
+    
+    auto result = RabinKarp::Search(text, pattern);
+    ASSERT_TRUE(result.empty());
 }
 
 TEST(RabinKarp_Contains)
 {
-    // TODO: Проверить метод Contains().
+    std::string text = "Find me if you can";
+    
+    ASSERT_TRUE(RabinKarp::Contains(text, "me"));
+    ASSERT_TRUE(RabinKarp::Contains(text, "can"));
+    ASSERT_TRUE(RabinKarp::Contains(text, "Find"));
+    ASSERT_FALSE(RabinKarp::Contains(text, "missing"));
+    ASSERT_TRUE(RabinKarp::Contains(text, ""));
 }
 
-TEST(RabinKarp_HashCollision)
+TEST(RabinKarp_UnicodeText)
 {
-    // TODO: Подобрать строки, дающие коллизию хэша.
-    //       Проверить, что алгоритм корректно обрабатывает коллизии.
+    std::string text = "Привет мир, мир";
+    std::string pattern = "мир";
+    
+    auto result = RabinKarp::Search(text, pattern);
+    ASSERT_EQ(result.size(), 2);
 }

@@ -1,5 +1,5 @@
 /// @file main.cpp
-/// @brief Точка входа в приложение «Фильмотека».
+/// @brief Точка входа в приложение "Фильмотека".
 
 #include "gui/AppWindow.h"
 #include "gui/AppController.h"
@@ -9,15 +9,21 @@
 #include <iostream>
 #include <string>
 
-/// @brief Путь к CSV-файлу по умолчанию
-static const std::string DEFAULT_CSV_PATH = "data/movies.csv";
+/// @brief Путь к CSV-файлу фильмов по умолчанию
+static const std::string DEFAULT_MOVIES_CSV_PATH = "data/movies.csv";
+
+/// @brief Путь к CSV-файлу актёров по умолчанию
+static const std::string DEFAULT_ACTORS_CSV_PATH = "data/actors.csv";
 
 int main(int argc, char* argv[])
 {
-    std::string csvPath = DEFAULT_CSV_PATH;
-    
+    std::string moviesCsvPath = DEFAULT_MOVIES_CSV_PATH;
+    std::string actorsCsvPath = DEFAULT_ACTORS_CSV_PATH;
+
     if (argc > 1)
-        csvPath = argv[1];
+        moviesCsvPath = argv[1];
+    if (argc > 2)
+        actorsCsvPath = argv[2];
 
     FilmLibrary::Logger::Instance().Init("film_library.log");
     FilmLibrary::Logger::Instance().Info("Запуск приложения \"Фильмотека\"");
@@ -29,7 +35,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    FilmLibrary::AppController controller(csvPath);
+    FilmLibrary::AppController controller(moviesCsvPath, actorsCsvPath);
     auto errors = controller.Initialize();
 
     if (!errors.empty())
@@ -50,15 +56,7 @@ int main(int argc, char* argv[])
 
     appWindow.Run(controller);
 
-    if (!controller.Shutdown())
-    {
-        FilmLibrary::Logger::Instance().Error("Ошибка сохранения CSV при выходе.");
-
-        // TODO: Показать ошибку пользователю (if окно уже закрыто - вывести в stderr).
-
-        std::cerr << "ОШИБКА: Не удалось сохранить данные." << std::endl;
-    }
-
+    controller.Shutdown();
     appWindow.Shutdown();
     FilmLibrary::Logger::Instance().Info("Приложение завершено.");
 

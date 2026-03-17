@@ -3,7 +3,7 @@
 /// @file MovieFormDialog.h
 /// @brief Модальное окно (диалог) для добавления / редактирования фильма.
 ///
-/// Работает как popup в Dear ImGui.
+/// Работает как popup в Dear ImGui. Поддерживает ввод жанров.
 
 #include "core/models/Movie.h"
 
@@ -49,6 +49,7 @@ namespace FilmLibrary
             float rating = 5.0f;
             char coverBuffer[512] = {};
             char streamLinkBuffer[512] = {};
+            char genresBuffer[512] = {};
 
             OnSubmitCallback onSubmit;
 

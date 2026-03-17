@@ -31,7 +31,7 @@ namespace FilmLibrary
             ///
             /// @param key      Строковый идентификатор ключа сортировки (например "rating", "year").
             /// @param movies   Основное хранилище фильмов.
-            /// @param comp     Компаратор «меньше» для Movie*.
+            /// @param comp     Компаратор "меньше" для Movie*.
             /// @return Ссылка на отсортированный вектор Movie*.
             const std::vector<Movie*>& GetSorted(const std::string& key, const std::vector<std::unique_ptr<Movie>>& movies, MovieComparator comp);
 

@@ -1,12 +1,12 @@
 #pragma once
 
 /// @file IndexManager.h
-/// @brief Менеджер индексов - управляет АВЛ-деревьями и отсортированными
+/// @brief Менеджер индексов - управляет деревьями оптимального поиска и отсортированными
 ///        векторами для быстрого поиска и фильтрации.
 ///
 /// При любом изменении данных (CRUD) индексы перестраиваются через Rebuild().
 
-#include "core/algorithms/AvlTree.h"
+#include "core/algorithms/OptimalBST.h"
 #include "core/models/Movie.h"
 
 #include <memory>
@@ -47,10 +47,15 @@ namespace FilmLibrary
                 const std::vector<std::unique_ptr<Movie>>& movies,
                 const std::string& pattern) const;
 
+            /// @brief Фильтровать фильмы по жанру.
+            std::vector<Movie*> FilterByGenre(
+                const std::vector<std::unique_ptr<Movie>>& movies,
+                const std::string& genre) const;
+
         private:
-            AvlTree<Movie*, std::string> titleIndex;
-            AvlTree<Movie*, std::string> studioIndex;
-            AvlTree<Movie*, int> yearIndex;
+            OptimalBST<Movie*, std::string> titleIndex;
+            OptimalBST<Movie*, std::string> studioIndex;
+            OptimalBST<Movie*, int> yearIndex;
 
             std::vector<Movie*> sortedByRating;
             std::vector<Movie*> sortedByLength;

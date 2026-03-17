@@ -18,7 +18,7 @@ namespace FilmLibrary
             /// @tparam T           Тип элемента вектора (обычно Movie*).
             /// @tparam Comparator  Функтор/лямбда: bool(const T&, const T&).
             /// @param data         Вектор для сортировки.
-            /// @param comparator   Компаратор «меньше».
+            /// @param comparator   Компаратор "меньше".
             template <typename T, typename Comparator>
             static void Sort(std::vector<T>& data, Comparator comparator);
 

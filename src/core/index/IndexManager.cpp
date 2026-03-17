@@ -6,6 +6,8 @@
 #include "core/algorithms/QuickSort.h"
 #include "core/algorithms/RabinKarp.h"
 
+#include <algorithm>
+
 namespace FilmLibrary
 {
     IndexManager::IndexManager() : titleIndex([](Movie* const& m) -> std::string { return m->title; })
@@ -20,9 +22,11 @@ namespace FilmLibrary
     {
         // TODO: Реализовать полную перестройку индексов.
         //
-        // 1. Очистить все АВЛ-деревья (Clear()).
-        // 2. Для каждого фильма вставить сырой указатель во все деревья.
-        // 3. Перестроить отсортированные векторы.
+        // 1. Собрать сырые указатели в std::vector<Movie*>.
+        // 2. titleIndex.BuildTree(pointers) — ключи извлекаются автоматически через KeyExtractor.
+        // 3. studioIndex.BuildTree(pointers).
+        // 4. yearIndex.BuildTree(pointers).
+        // 5. Перестроить отсортированные векторы.
 
         (void)movies;
     }
@@ -68,10 +72,18 @@ namespace FilmLibrary
     {
         // TODO: Перебрать все фильмы, для каждого вызвать
         //       RabinKarp::Contains(movie->description, pattern).
-        //       Собрать совпавшие указатели.
 
         (void)movies;
         (void)pattern;
+        return {};
+    }
+
+    std::vector<Movie*> IndexManager::FilterByGenre(const std::vector<std::unique_ptr<Movie>>& movies, const std::string& genre) const
+    {
+        // TODO: Перебрать все фильмы, для каждого проверить наличие genre в movie->genres.
+
+        (void)movies;
+        (void)genre;
         return {};
     }
 

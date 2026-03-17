@@ -19,5 +19,7 @@ out/
 .DS_Store
 Thumbs.db
 
-data/movies.csv
-data/movies.csv.example
+data/*.csv
+data/*.csv.example
+
+imgui.ini

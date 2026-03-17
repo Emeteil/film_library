@@ -1,5 +1,5 @@
 /// @file DataManager.cpp
-/// @brief Реализация центрального менеджера данных.
+/// @brief Реализация центрального менеджера данных фильмов.
 
 #include "core/DataManager.h"
 #include "core/storage/CsvParser.h"
@@ -14,12 +14,14 @@ namespace FilmLibrary
 
     std::vector<std::string> DataManager::LoadFromCsv(const std::string& filePath)
     {
+        csvFilePath = filePath;
+
         // TODO: Реализовать загрузку.
         //
         // 1. Вызвать CsvParser::LoadFromFile(filePath).
         // 2. Перенести movies из результата в this->movies.
-        // 3. Назначить уникальные ID каждому фильму (nextId++).
-        // 4. Вызвать OnDataChanged() для построения индексов.
+        // 3. Найти максимальный id и установить nextId = max + 1.
+        // 4. Вызвать OnDataChanged() для построения индексов (без авто-сохранения при загрузке).
         // 5. Залогировать результат.
         // 6. Вернуть список ошибок.
 
@@ -27,10 +29,9 @@ namespace FilmLibrary
         return {};
     }
 
-    bool DataManager::SaveToCsv(const std::string& filePath) const
+    bool DataManager::SaveToCsv() const
     {
-        // TODO: Делегировать CsvParser::SaveToFile().
-        (void)filePath;
+        // TODO: Делегировать CsvParser::SaveToFile(csvFilePath, movies).
         return false;
     }
 
@@ -119,6 +120,11 @@ namespace FilmLibrary
         return indexManager.SearchByDescription(movies, pattern);
     }
 
+    std::vector<Movie*> DataManager::FilterByGenre(const std::string& genre) const
+    {
+        return indexManager.FilterByGenre(movies, genre);
+    }
+
     const std::vector<Movie*>& DataManager::GetSortedByRating(bool ascending)
     {
         // TODO: Делегировать SortCache::GetSorted() с соответствующим компаратором.
@@ -143,9 +149,10 @@ namespace FilmLibrary
 
     void DataManager::OnDataChanged()
     {
-        // TODO: Реализовать перестройку индексов и сброс кэша.
+        // TODO: Реализовать перестройку индексов, сброс кэша и авто-сохранение.
         //
         // 1. indexManager.Rebuild(movies);
         // 2. sortCache.Invalidate();
+        // 3. SaveToCsv();
     }
 }

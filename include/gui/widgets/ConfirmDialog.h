@@ -20,7 +20,7 @@ namespace FilmLibrary
             /// @brief Показать окно подтверждения.
             /// @param title    Заголовок окна.
             /// @param message  Текст сообщения.
-            /// @param onConfirm Callback при нажатии «Да».
+            /// @param onConfirm Callback при нажатии "Да".
             void Show(const std::string& title, const std::string& message, OnConfirmCallback onConfirm);
 
             /// @brief Отрисовать диалог (вызывать каждый кадр).

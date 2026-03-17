@@ -22,6 +22,7 @@ namespace FilmLibrary
         std::memset(descriptionBuffer, 0, sizeof(descriptionBuffer));
         std::memset(coverBuffer, 0, sizeof(coverBuffer));
         std::memset(streamLinkBuffer, 0, sizeof(streamLinkBuffer));
+        std::memset(genresBuffer, 0, sizeof(genresBuffer));
         year = 2024;
         lengthMinutes = 90;
         rating = 5.0f;
@@ -46,8 +47,8 @@ namespace FilmLibrary
         // 3. ImGui::InputText для каждого поля.
         // 4. ImGui::InputInt для year, lengthMinutes.
         // 5. ImGui::SliderFloat для rating.
-        // 6. Кнопка «OK» → Validate(), если ок - BuildMovieFromBuffers(), onSubmit(movie).
-        // 7. Кнопка «Отмена» → isOpen = false.
+        // 6. Кнопка "OK" → Validate(), если ок - BuildMovieFromBuffers(), onSubmit(movie).
+        // 7. Кнопка "Отмена" → isOpen = false.
         // 8. ImGui::EndPopup().
     }
 
