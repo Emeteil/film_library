@@ -23,17 +23,11 @@ namespace FilmLibrary
             static void Sort(std::vector<T>& /*data*/, Comparator /*comparator*/) {}
 
         private:
-            /// @brief Порог переключения на InsertionSort.
-            static constexpr int INSERTION_SORT_THRESHOLD = 16;
-
             template <typename T, typename Comparator>
             static void SortRange(std::vector<T>& /*data*/, int /*low*/, int /*high*/, Comparator& /*comp*/) {}
 
             template <typename T, typename Comparator>
-            static int Partition(std::vector<T>& /*data*/, int /*low*/, int /*high*/, Comparator& /*comp*/) { return 0; }
-
-            template <typename T, typename Comparator>
-            static void InsertionSort(std::vector<T>& /*data*/, int /*low*/, int /*high*/, Comparator& /*comp*/) {}
+            static std::pair<int, int> Partition(std::vector<T>& /*data*/, int /*low*/, int /*high*/, Comparator& /*comp*/);
 
             template <typename T>
             static int MedianOfThree(std::vector<T>& /*data*/, int /*low*/, int /*high*/) { return 0; }
