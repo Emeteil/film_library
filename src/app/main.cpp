@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     if (argc > 2)
         actorsCsvPath = argv[2];
 
-    FilmLibrary::Logger::Instance().Init("film_library.log");
+    FilmLibrary::Logger::Instance().Init("logs/film_library.log");
     FilmLibrary::Logger::Instance().Info("Запуск приложения \"Фильмотека\"");
 
     FilmLibrary::AppWindow appWindow("Фильмотека", 1280, 720);

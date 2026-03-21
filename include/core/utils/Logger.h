@@ -6,14 +6,15 @@
 /// Пишет в файл и/или stdout. Поддерживает уровни: INFO, WARNING, ERROR.
 
 #include <string>
+#include <fstream>
 
 namespace FilmLibrary
 {
     enum class LogLevel
     {
-        Info,
-        Warning,
-        Error
+        Info = 0,
+        Warning = 1,
+        Error = 2
     };
 
     class Logger
@@ -45,6 +46,7 @@ namespace FilmLibrary
 
             LogLevel minLevel = LogLevel::Info;
             std::string logFilePath;
+            std::ofstream logStream;
 
             /// @brief Преобразовать уровень в строку.
             static const char* LevelToString(LogLevel level);

@@ -16,27 +16,38 @@ namespace FilmLibrary
         return instance;
     }
 
-    Logger::~Logger() = default;
+    Logger::~Logger()
+    {
+        if (logStream.is_open())
+            logStream.close();
+    }
 
     void Logger::Init(const std::string& filePath)
     {
+        if (logStream.is_open())
+            logStream.close();
+
         logFilePath = filePath;
+        if (!logFilePath.empty())
+            logStream.open(logFilePath, std::ios::app);
     }
 
     void Logger::Log(LogLevel level, const std::string& message)
     {
-        if (level < minLevel)
+        if (static_cast<int>(level) < static_cast<int>(minLevel))
             return;
 
-        // TODO: Реализовать форматирование и вывод.
-        //
-        // Формат: [YYYY-MM-DD HH:MM:SS] [LEVEL] message
-        //
-        // 1. Сформировать timestamp.
-        // 2. Вывести в stdout.
-        // 3. Если logFilePath не пуст - дописать в файл (std::ofstream, append).
+        std::time_t now = std::time(nullptr);
+        std::tm* localTime = std::localtime(&now);
 
-        (void)message;
+        char timestamp[22];
+        std::strftime(timestamp, sizeof(timestamp), "[%Y-%m-%d %H:%M:%S]", localTime);
+
+        std::string formattedMessage = std::string(timestamp) + " [" + LevelToString(level) + "] " + message;
+        std::cout << formattedMessage << std::endl;
+
+        if (logStream.is_open())
+            logStream << formattedMessage << std::endl;
     }
 
     void Logger::Info(const std::string& message)
