@@ -38,22 +38,14 @@ namespace FilmLibrary
     template <typename T, typename Comparator>
     std::pair<int, int> QuickSort::Partition(std::vector<T>& data, int low, int high, Comparator& comparator)
     {
-        T pivot = data[MedianOfThree(data, low, high)];
+        T pivot = data[MedianOfThree(data, low, high, comparator)];
         int i = low;
         int j = high;
         
-        while (i < j)
+        while (i <= j)
         {
-            while (i <= high)
-            {
-                if (!comparator(data[i], pivot)) break;
-                i++;
-            }
-            while (j >= low)
-            {
-                if (comparator(data[j], pivot)) break;
-                j--;
-            }
+            while (comparator(data[i], pivot)) i++;
+            while (comparator(pivot, data[j])) j--;
             
             if (i <= j) 
             {
@@ -66,9 +58,21 @@ namespace FilmLibrary
         return std::make_pair(i, j);
     }
 
-    template <typename T>
-    int QuickSort::MedianOfThree(std::vector<T>&, int low, int)
+    template <typename T, typename Comparator>
+    int QuickSort::MedianOfThree(std::vector<T>& data, int low, int high, Comparator& comparator)
     {
-        return low;
-    }
+        int mid = low + (high - low) / 2;
+        const T& a = data[low];
+        const T& b = data[mid];
+        const T& c = data[high];
+        if (comparator(a, b)) {
+            if (comparator(b, c)) return mid;
+            if (comparator(a, c)) return high;
+            return low;
+        } else {
+            if (comparator(a, c)) return low;
+            if (comparator(b, c)) return high;
+            return mid;
+        }
+    }   
 }

@@ -5,54 +5,66 @@
 #include "core/algorithms/QuickSort.h"
 
 #include <vector>
-#include <cstdlib>
-#include <ctime>
-
-// TODO: Реализовать тесты после имплементации QuickSort.
 
 TEST(QuickSort_RandomArray)
-{
-    std::vector<int> v(10);
-    std::srand(std::time(NULL));
-    for (size_t i = 0; i < 10; i++) {
-        v[i] = 1 + std::rand() % 10;
-        std::cout << v[i] << " ";
-    }
-    std::cout << std::endl;
-    
-    FilmLibrary::QuickSort::Sort(v, [](int a, int b) { return a < b; });
-
-    for (size_t i = 0; i < 10; i++) {
-        std::cout << v[i] << " ";
-    }
-    std::cout << std::endl;
-    
-    // TODO: Создать массив случайных чисел.
-    //       Отсортировать. Проверить, что массив отсортирован.
+{  
+    std::vector<int> data = {8, 1, 9, 3, 5};
+    FilmLibrary::QuickSort::Sort(data, [](int a, int b) { return a < b; }); 
+    ASSERT_EQ(data.size(), static_cast<std::size_t>(5));
+    ASSERT_EQ(data[0], 1);
+    ASSERT_EQ(data[1], 3);
+    ASSERT_EQ(data[2], 5);
+    ASSERT_EQ(data[3], 8);
+    ASSERT_EQ(data[4], 9);   
 }
 
 TEST(QuickSort_AlreadySorted)
 {
-    // TODO: Отсортировать уже отсортированный массив.
-    //       Проверить, что результат корректен.
+    std::vector<int> data = {1, 3, 5, 8, 9};
+    FilmLibrary::QuickSort::Sort(data, [](int a, int b) { return a < b; }); 
+    ASSERT_EQ(data.size(), static_cast<std::size_t>(5));
+    ASSERT_EQ(data[0], 1);
+    ASSERT_EQ(data[1], 3);
+    ASSERT_EQ(data[2], 5);
+    ASSERT_EQ(data[3], 8);
+    ASSERT_EQ(data[4], 9);
 }
 
 TEST(QuickSort_ReverseSorted)
 {
-    // TODO: Отсортировать массив, отсортированный в обратном порядке.
+    std::vector<int> data = {9, 8, 5, 3, 1};
+    FilmLibrary::QuickSort::Sort(data, [](int a, int b) { return a < b; }); 
+    ASSERT_EQ(data.size(), static_cast<std::size_t>(5));
+    ASSERT_EQ(data[0], 1);
+    ASSERT_EQ(data[1], 3);
+    ASSERT_EQ(data[2], 5);
+    ASSERT_EQ(data[3], 8);
+    ASSERT_EQ(data[4], 9);
 }
 
 TEST(QuickSort_EmptyArray)
 {
-    // TODO: Пустой вектор - сортировка не должна падать.
+    std::vector<int> data;
+    FilmLibrary::QuickSort::Sort(data, [](int a, int b) { return a < b; }); 
+    ASSERT_EQ(data.size(), static_cast<std::size_t>(0));
 }
 
 TEST(QuickSort_SingleElement)
 {
-    // TODO: Вектор из одного элемента - результат тривиален.
+    std::vector<int> data = {1};
+    FilmLibrary::QuickSort::Sort(data, [](int a, int b) { return a < b; }); 
+    ASSERT_EQ(data.size(), static_cast<std::size_t>(1));
+    ASSERT_EQ(data[0], 1);
 }
 
 TEST(QuickSort_Duplicates)
 {
-    // TODO: Массив с повторяющимися элементами.
+    std::vector<int> data = {9, 8, 1, 1, 1};
+    FilmLibrary::QuickSort::Sort(data, [](int a, int b) { return a < b; }); 
+    ASSERT_EQ(data.size(), static_cast<std::size_t>(5));
+    ASSERT_EQ(data[0], 1);
+    ASSERT_EQ(data[1], 1);
+    ASSERT_EQ(data[2], 1);
+    ASSERT_EQ(data[3], 8);
+    ASSERT_EQ(data[4], 9);
 }

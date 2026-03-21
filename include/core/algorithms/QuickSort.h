@@ -30,8 +30,8 @@ namespace FilmLibrary
             template <typename T, typename Comparator>
             static std::pair<int, int> Partition(std::vector<T>& data, int low, int high, Comparator& comparator);
 
-            template <typename T>
-            static int MedianOfThree(std::vector<T>& data, int low, int high);
+            template <typename T, typename Comparator>
+            static int MedianOfThree(std::vector<T>& data, int low, int high, Comparator& comparator);
     };
 }
 
