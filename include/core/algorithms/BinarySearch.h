@@ -23,14 +23,39 @@ namespace FilmLibrary
             /// @param  getter      Функция получения значения из элемента.
             /// @return Вектор элементов, попадающих в диапазон.
             template <typename T, typename Value, typename ValueGetter>
-            static std::vector<T> FindInRange(const std::vector<T>& sortedData, const Value& low, const Value& high, ValueGetter getter);
+            static std::vector<T> FindInRange(const std::vector<T>& /*sortedData*/, const Value& /*low*/, const Value& /*high*/, ValueGetter /*getter*/)
+            {
+                return {};
+            }
 
             /// @brief Найти индекс первого элемента >= value (lower_bound).
+            ///
+            /// @tparam T           Тип элемента (обычно Movie*).
+            /// @tparam Value       Тип сравниваемого значения.
+            /// @tparam ValueGetter Функция извлечения сравниваемого значения из T.
+            /// @param  sortedData  Отсортированный вектор.
+            /// @param  value       Значение для поиска.
+            /// @param  getter      Функция получения значения из элемента.
+            /// @return Индекс первого элемента, который не меньше value.
             template <typename T, typename Value, typename ValueGetter>
-            static std::size_t LowerBound(const std::vector<T>& sortedData, const Value& value, ValueGetter getter);
+            static std::size_t LowerBound(const std::vector<T>& /*sortedData*/, const Value& /*value*/, ValueGetter /*getter*/)
+            {
+                return 0;
+            }
 
             /// @brief Найти индекс первого элемента > value (upper_bound).
+            ///
+            /// @tparam T           Тип элемента (обычно Movie*).
+            /// @tparam Value       Тип сравниваемого значения.
+            /// @tparam ValueGetter Функция извлечения сравниваемого значения из T.
+            /// @param  sortedData  Отсортированный вектор.
+            /// @param  value       Значение для поиска.
+            /// @param  getter      Функция получения значения из элемента.
+            /// @return Индекс первого элемента, который больше value.
             template <typename T, typename Value, typename ValueGetter>
-            static std::size_t UpperBound(const std::vector<T>& sortedData, const Value& value, ValueGetter getter);
+            static std::size_t UpperBound(const std::vector<T>& /*sortedData*/, const Value& /*value*/, ValueGetter /*getter*/)
+            {
+                return 0;
+            }
     };
 }
