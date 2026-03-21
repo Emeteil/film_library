@@ -1,5 +1,4 @@
 add_library(film_library_core STATIC
-    algorithms/QuickSort.cpp
     algorithms/BinarySearch.cpp
     algorithms/RabinKarp.cpp
 

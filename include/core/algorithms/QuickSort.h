@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <vector>
+#include <utility>
 
 namespace FilmLibrary
 {
@@ -20,16 +21,18 @@ namespace FilmLibrary
             /// @param data         Вектор для сортировки.
             /// @param comparator   Компаратор "меньше".
             template <typename T, typename Comparator>
-            static void Sort(std::vector<T>& /*data*/, Comparator /*comparator*/) {}
+            static void Sort(std::vector<T>& data, Comparator comparator);
 
         private:
             template <typename T, typename Comparator>
-            static void SortRange(std::vector<T>& /*data*/, int /*low*/, int /*high*/, Comparator& /*comp*/) {}
+            static void SortRange(std::vector<T>& data, int low, int high, Comparator& comparator);
 
             template <typename T, typename Comparator>
-            static std::pair<int, int> Partition(std::vector<T>& /*data*/, int /*low*/, int /*high*/, Comparator& /*comp*/);
+            static std::pair<int, int> Partition(std::vector<T>& data, int low, int high, Comparator& comparator);
 
             template <typename T>
-            static int MedianOfThree(std::vector<T>& /*data*/, int /*low*/, int /*high*/) { return 0; }
+            static int MedianOfThree(std::vector<T>& data, int low, int high);
     };
 }
+
+#include "../../../src/core/algorithms/QuickSort.cpp"
