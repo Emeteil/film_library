@@ -10,7 +10,8 @@
 
 namespace FilmLibrary
 {
-    IndexManager::IndexManager() : titleIndex([](Movie* const& m) -> std::string { return m->title; })
+    IndexManager::IndexManager() 
+        : titleIndex([](Movie* const& m) -> std::string { return m->title; })
         , studioIndex([](Movie* const& m) -> std::string { return m->studio; })
         , yearIndex([](Movie* const& m) -> int { return m->year; })
     {
@@ -20,78 +21,89 @@ namespace FilmLibrary
 
     void IndexManager::Rebuild(const std::vector<std::unique_ptr<Movie>>& movies)
     {
-        // TODO: Реализовать полную перестройку индексов.
-        //
-        // 1. Собрать сырые указатели в std::vector<Movie*>.
-        // 2. titleIndex.BuildTree(pointers) — ключи извлекаются автоматически через KeyExtractor.
-        // 3. studioIndex.BuildTree(pointers).
-        // 4. yearIndex.BuildTree(pointers).
-        // 5. Перестроить отсортированные векторы.
+        std::vector<Movie*> pointers;
+        pointers.reserve(movies.size());
+        for (const auto& m : movies)
+        {
+            pointers.push_back(m.get());
+        }
 
-        (void)movies;
+        titleIndex.BuildTree(pointers);
+        studioIndex.BuildTree(pointers);
+        yearIndex.BuildTree(pointers);
+
+        RebuildSortedVectors(movies);
     }
 
     std::vector<Movie*> IndexManager::FindByTitlePrefix(const std::string& prefix) const
     {
-        // TODO: Делегировать titleIndex.FindByPrefix(prefix).
-        (void)prefix;
-        return {};
+        return titleIndex.FindByPrefix(prefix);
     }
 
     std::vector<Movie*> IndexManager::FindByStudioPrefix(const std::string& prefix) const
     {
-        // TODO: Делегировать studioIndex.FindByPrefix(prefix).
-        (void)prefix;
-        return {};
+        return studioIndex.FindByPrefix(prefix);
     }
 
     std::vector<Movie*> IndexManager::FindByYear(int year) const
     {
-        // TODO: Делегировать yearIndex.Find(year).
-        (void)year;
-        return {};
+        return yearIndex.Find(year);
     }
 
     std::vector<Movie*> IndexManager::FilterByRatingRange(double low, double high) const
     {
-        // TODO: Использовать BinarySearch::FindInRange() по sortedByRating.
-        (void)low;
-        (void)high;
-        return {};
+        return BinarySearch::FindInRange(sortedByRating, low, high, [](Movie* m) { return m->rating; });
     }
 
     std::vector<Movie*> IndexManager::FilterByLengthRange(int low, int high) const
     {
-        // TODO: Использовать BinarySearch::FindInRange() по sortedByLength.
-        (void)low;
-        (void)high;
-        return {};
+        return BinarySearch::FindInRange(sortedByLength, low, high, [](Movie* m) { return m->length; });
     }
 
     std::vector<Movie*> IndexManager::SearchByDescription(const std::vector<std::unique_ptr<Movie>>& movies, const std::string& pattern) const
     {
-        // TODO: Перебрать все фильмы, для каждого вызвать
-        //       RabinKarp::Contains(movie->description, pattern).
+        std::vector<Movie*> result;
+        if (pattern.empty())
+            return result;
 
-        (void)movies;
-        (void)pattern;
-        return {};
+        for (const auto& m : movies)
+        {
+            if (RabinKarp::Contains(m->description, pattern))
+                result.push_back(m.get());
+        }
+        return result;
     }
 
     std::vector<Movie*> IndexManager::FilterByGenre(const std::vector<std::unique_ptr<Movie>>& movies, const std::string& genre) const
     {
-        // TODO: Перебрать все фильмы, для каждого проверить наличие genre в movie->genres.
-
-        (void)movies;
-        (void)genre;
-        return {};
+        std::vector<Movie*> result;
+        for (const auto& m : movies)
+        {
+            if (std::find(m->genres.begin(), m->genres.end(), genre) != m->genres.end())
+                result.push_back(m.get());
+        }
+        return result;
     }
 
     void IndexManager::RebuildSortedVectors(const std::vector<std::unique_ptr<Movie>>& movies)
     {
-        // TODO: Заполнить sortedByRating и sortedByLength сырыми указателями,
-        //       затем отсортировать каждый вектор через QuickSort::Sort().
+        sortedByRating.clear();
+        sortedByLength.clear();
+        sortedByRating.reserve(movies.size());
+        sortedByLength.reserve(movies.size());
 
-        (void)movies;
+        for (const auto& m : movies)
+        {
+            sortedByRating.push_back(m.get());
+            sortedByLength.push_back(m.get());
+        }
+
+        QuickSort::Sort(sortedByRating, [](Movie* a, Movie* b) {
+            return a->rating < b->rating;
+        });
+
+        QuickSort::Sort(sortedByLength, [](Movie* a, Movie* b) {
+            return a->length < b->length;
+        });
     }
 }
