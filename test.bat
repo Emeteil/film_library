@@ -1,9 +1,18 @@
 @echo off
+set "PATH=C:\msys64\ucrt64\bin;%PATH%"
 echo Building tests...
+
+if exist build (
+    findstr /C:"CMAKE_GENERATOR:INTERNAL=Ninja" build\CMakeCache.txt >nul 2>&1
+    if errorlevel 1 (
+        rmdir /s /q build
+    )
+)
 
 if not exist build mkdir build
 cd build
-cmake ..
+
+cmake -G Ninja ..
 cmake --build . --target film_library_tests --config Debug
 
 if %ERRORLEVEL% neq 0 (
