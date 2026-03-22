@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <filesystem>
 
 namespace FilmLibrary
 {
@@ -29,7 +30,14 @@ namespace FilmLibrary
 
         logFilePath = filePath;
         if (!logFilePath.empty())
+        {
+            std::filesystem::path p(logFilePath);
+
+            if (p.has_parent_path() && !std::filesystem::exists(p.parent_path()))
+                std::filesystem::create_directories(p.parent_path());
+
             logStream.open(logFilePath, std::ios::app);
+        }
     }
 
     void Logger::Log(LogLevel level, const std::string& message)
