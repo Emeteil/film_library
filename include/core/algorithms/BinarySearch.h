@@ -16,17 +16,15 @@ namespace FilmLibrary
             /// @brief Найти все элементы, значение которых попадает в диапазон [low, high].
             ///
             /// @tparam T           Тип элемента (обычно Movie*).
+            /// @tparam Value       Тип сравниваемого значения.
             /// @tparam ValueGetter Функция извлечения сравниваемого значения из T.
             /// @param  sortedData  Отсортированный вектор.
-            /// @param  low         Нижняя граница диапазона.
-            /// @param  high        Верхняя граница диапазона.
+            /// @param  low         Нижняя граница диапазона (включительно).
+            /// @param  high        Верхняя граница диапазона (включительно).
             /// @param  getter      Функция получения значения из элемента.
             /// @return Вектор элементов, попадающих в диапазон.
             template <typename T, typename Value, typename ValueGetter>
-            static std::vector<T> FindInRange(const std::vector<T>& /*sortedData*/, const Value& /*low*/, const Value& /*high*/, ValueGetter /*getter*/)
-            {
-                return {};
-            }
+            static std::vector<T> FindInRange(const std::vector<T>& sortedData, const Value& low, const Value& high, ValueGetter getter);
 
             /// @brief Найти индекс первого элемента >= value (lower_bound).
             ///
@@ -38,10 +36,7 @@ namespace FilmLibrary
             /// @param  getter      Функция получения значения из элемента.
             /// @return Индекс первого элемента, который не меньше value.
             template <typename T, typename Value, typename ValueGetter>
-            static std::size_t LowerBound(const std::vector<T>& /*sortedData*/, const Value& /*value*/, ValueGetter /*getter*/)
-            {
-                return 0;
-            }
+            static std::size_t LowerBound(const std::vector<T>& sortedData, const Value& value, ValueGetter getter);
 
             /// @brief Найти индекс первого элемента > value (upper_bound).
             ///
@@ -53,9 +48,8 @@ namespace FilmLibrary
             /// @param  getter      Функция получения значения из элемента.
             /// @return Индекс первого элемента, который больше value.
             template <typename T, typename Value, typename ValueGetter>
-            static std::size_t UpperBound(const std::vector<T>& /*sortedData*/, const Value& /*value*/, ValueGetter /*getter*/)
-            {
-                return 0;
-            }
+            static std::size_t UpperBound(const std::vector<T>& sortedData, const Value& value, ValueGetter getter);
     };
 }
+
+#include "../../../src/core/algorithms/BinarySearch.cpp"

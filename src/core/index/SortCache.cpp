@@ -11,17 +11,19 @@ namespace FilmLibrary
 
     const std::vector<Movie*>& SortCache::GetSorted(const std::string& key, const std::vector<std::unique_ptr<Movie>>& movies, MovieComparator comp)
     {
-        // TODO: Реализовать ленивую инициализацию.
-        //
-        // 1. Проверить, есть ли ключ в cache.
-        // 2. Если нет - создать вектор Movie* из movies,
-        //    отсортировать через QuickSort::Sort() с comp,
-        //    сохранить в cache[key].
-        // 3. Вернуть ссылку на cache[key].
+        auto it = cache.find(key);
+        if (it != cache.end())
+            return it->second;
 
-        (void)movies;
-        (void)comp;
-        return cache[key];
+        std::vector<Movie*> sorted;
+        sorted.reserve(movies.size());
+        for (const auto& movie : movies)
+            sorted.push_back(movie.get());
+
+        QuickSort::Sort(sorted, comp);
+
+        auto result = cache.emplace(key, std::move(sorted));
+        return result.first->second;
     }
 
     void SortCache::Invalidate()

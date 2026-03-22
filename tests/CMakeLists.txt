@@ -5,6 +5,7 @@ add_executable(film_library_tests
     test_binary_search.cpp
     test_rabin_karp.cpp
     test_csv_parser.cpp
+    test_sort_cache.cpp
 )
 
 target_link_libraries(film_library_tests PRIVATE
