@@ -93,6 +93,14 @@ namespace FilmLibrary
             SearchMode currentSearchMode = SearchMode::None;
             std::string currentSearchQuery;
 
+            bool isRatingFilterActive = false;
+            double ratingFilterLow = 0.0;
+            double ratingFilterHigh = 0.0;
+
+            bool isLengthFilterActive = false;
+            int lengthFilterLow = 0;
+            int lengthFilterHigh = 0;
+
             SortKey currentSortKey = SortKey::None;
             bool currentSortAscending = true;
 

@@ -4,6 +4,7 @@
 #include "gui/AppController.h"
 #include "gui/widgets/NotificationManager.h"
 #include "core/utils/Logger.h"
+#include "core/algorithms/QuickSort.h"
 
 namespace FilmLibrary
 {
@@ -17,12 +18,6 @@ namespace FilmLibrary
 
     std::vector<std::string> AppController::Initialize()
     {
-        // TODO: Реализовать инициализацию.
-        //
-        // 1. dataManager.LoadFromCsv(moviesCsvPath).
-        // 2. actorManager.LoadFromCsv(actorsCsvPath).
-        // 3. Собрать и вернуть все ошибки.
-
         std::vector<std::string> errors;
         auto movieErrors = dataManager.LoadFromCsv(moviesCsvPath);
         auto actorErrors = actorManager.LoadFromCsv(actorsCsvPath);
@@ -34,7 +29,6 @@ namespace FilmLibrary
 
     void AppController::Shutdown()
     {
-        // Данные уже сохранены автоматически при каждом изменении.
         Logger::Instance().Info("Контроллер завершает работу.");
     }
 
@@ -105,22 +99,24 @@ namespace FilmLibrary
 
     void AppController::FilterByRatingRange(double low, double high)
     {
-        // TODO: Сохранить параметры фильтра и пометить displayDirty.
-        (void)low;
-        (void)high;
+        isRatingFilterActive = true;
+        ratingFilterLow = low;
+        ratingFilterHigh = high;
         displayDirty = true;
     }
 
     void AppController::FilterByLengthRange(int low, int high)
     {
-        // TODO: Сохранить параметры фильтра и пометить displayDirty.
-        (void)low;
-        (void)high;
+        isLengthFilterActive = true;
+        lengthFilterLow = low;
+        lengthFilterHigh = high;
         displayDirty = true;
     }
 
     void AppController::ClearFilter()
     {
+        isRatingFilterActive = false;
+        isLengthFilterActive = false;
         displayDirty = true;
     }
 
@@ -139,18 +135,107 @@ namespace FilmLibrary
 
     void AppController::RefreshDisplayList()
     {
-        // TODO: Реализовать построение displayMovies на основе:
-        //
-        // 1. Текущего поискового режима (currentSearchMode + currentSearchQuery).
-        // 2. Текущих фильтров (рейтинг, длительность).
-        // 3. Текущей сортировки (currentSortKey + currentSortAscending).
-
         displayMovies.clear();
+        
+        std::vector<Movie*> currentList;
+        bool listInitialized = false;
 
-        const auto& allMovies = dataManager.GetAllMovies();
-        for (const auto& m : allMovies)
+        if (currentSearchMode != SearchMode::None && !currentSearchQuery.empty())
         {
-            displayMovies.push_back(m.get());
+            if (currentSearchMode == SearchMode::ByTitle)
+            {
+                currentList = dataManager.FindByTitlePrefix(currentSearchQuery);
+            }
+            else if (currentSearchMode == SearchMode::ByStudio)
+            {
+                currentList = dataManager.FindByStudioPrefix(currentSearchQuery);
+            }
+            else if (currentSearchMode == SearchMode::ByYear)
+            {
+                try
+                {
+                    currentList = dataManager.FindByYear(std::stoi(currentSearchQuery));
+                }
+                catch(...) {}
+            }
+            else if (currentSearchMode == SearchMode::ByDescription)
+            {
+                currentList = dataManager.SearchByDescription(currentSearchQuery);
+            }
+            else if (currentSearchMode == SearchMode::ByGenre)
+            {
+                currentList = dataManager.FilterByGenre(currentSearchQuery);
+            }
+                
+            listInitialized = true;
+        }
+        else if (isRatingFilterActive)
+        {
+            currentList = dataManager.FilterByRatingRange(ratingFilterLow, ratingFilterHigh);
+            listInitialized = true;
+        }
+        else if (isLengthFilterActive)
+        {
+            currentList = dataManager.FilterByLengthRange(lengthFilterLow, lengthFilterHigh);
+            listInitialized = true;
+        }
+
+        if (!listInitialized)
+        {
+            if (currentSortKey != SortKey::None && !isRatingFilterActive && !isLengthFilterActive)
+            {
+                if (currentSortKey == SortKey::Rating)
+                    displayMovies = dataManager.GetSortedByRating(currentSortAscending);
+                else if (currentSortKey == SortKey::Year)
+                    displayMovies = dataManager.GetSortedByYear(currentSortAscending);
+                else if (currentSortKey == SortKey::Title)
+                    displayMovies = dataManager.GetSortedByTitle(currentSortAscending);
+                return;
+            }
+            
+            for (const auto& m : dataManager.GetAllMovies())
+            {
+                currentList.push_back(m.get());
+            }
+        }
+
+        for (Movie* m : currentList)
+        {
+            if (isRatingFilterActive)
+            {
+                if (m->rating < ratingFilterLow || m->rating > ratingFilterHigh)
+                    continue;
+            }
+            
+            if (isLengthFilterActive)
+            {
+                if (m->length < lengthFilterLow || m->length > lengthFilterHigh)
+                    continue;
+            }
+            
+            displayMovies.push_back(m);
+        }
+
+        if (currentSortKey != SortKey::None)
+        {
+            if (currentSortKey == SortKey::Rating)
+            {
+                QuickSort::Sort(displayMovies, [asc = currentSortAscending](const Movie* a, const Movie* b) {
+                    return asc ? (a->rating < b->rating) : (a->rating > b->rating);
+                });
+            }
+            else if (currentSortKey == SortKey::Year)
+            {
+                QuickSort::Sort(displayMovies, [asc = currentSortAscending](const Movie* a, const Movie* b) {
+                    return asc ? (a->year < b->year) : (a->year > b->year);
+                });
+            }
+            else if (currentSortKey == SortKey::Title)
+            {
+                QuickSort::Sort(displayMovies, [asc = currentSortAscending](const Movie* a, const Movie* b) {
+                    return asc ? (a->title < b->title) : (a->title > b->title);
+                });
+            }
         }
     }
 }
