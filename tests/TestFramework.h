@@ -20,6 +20,12 @@
 namespace TestFramework
 {
 
+class NotImplementedException : public std::exception
+{
+public:
+    const char* what() const noexcept override { return "Not implemented"; }
+};
+
 struct TestCase
 {
     std::string name;
@@ -42,6 +48,7 @@ inline int RunAllTests()
 {
     int passed = 0;
     int failed = 0;
+    int not_impl = 0;
 
     for (const auto& test : GetTestRegistry())
     {
@@ -51,6 +58,11 @@ inline int RunAllTests()
             std::cout << "[PASS] " << test.name << std::endl;
             ++passed;
         }
+        catch (const NotImplementedException&)
+        {
+            std::cout << "[SKIP] " << test.name << " (Not Implemented)" << std::endl;
+            ++not_impl;
+        }
         catch (const std::exception& e)
         {
             std::cerr << "[FAIL] " << test.name << ": " << e.what() << std::endl;
@@ -58,7 +70,7 @@ inline int RunAllTests()
         }
     }
 
-    std::cout << "\n=== Результат: " << passed << " пройдено, " << failed << " провалено ===" << std::endl;
+    std::cout << "\n=== Результат: " << passed << " пройдено, " << failed << " провалено, " << not_impl << " не реализовано ===" << std::endl;
 
     return failed > 0 ? 1 : 0;
 }
@@ -102,3 +114,5 @@ inline int RunAllTests()
                 " at " + __FILE__ + ":" + std::to_string(__LINE__));        \
         }                                                                   \
     } while (false)
+
+#define NOT_IMPLEMENTED() throw TestFramework::NotImplementedException()
