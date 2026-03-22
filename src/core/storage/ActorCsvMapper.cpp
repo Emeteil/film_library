@@ -25,16 +25,17 @@ namespace FilmLibrary
             if (!token.empty())
             {
                 tokens.insert(stoi(token));
-            }   
+            }
         }
         return tokens;
     }
 
-    std::unique_ptr<Actor> ActorCsvMapper::FromFields(const std::vector<std::string>& fields, int lineNumber)
+    std::unique_ptr<Actor> ActorCsvMapper::FromFields(const std::vector<std::string>& fields, int)
     {
         if (fields.size() < 6) return nullptr;
         auto actor = std::make_unique<Actor>();
-        try {
+        try
+        {
             actor->id = std::stoi(fields[0]);
             actor->name = fields[1];
             actor->description = fields[2];
@@ -44,16 +45,17 @@ namespace FilmLibrary
         }
         catch(const std::exception& e)
         {
-            std::string msg = "Error line " + std::to_string(lineNumber) + " : " + e.what() + '\n';
-            throw std::runtime_error(msg);
+            return nullptr;
         }
         return actor;
     }
 
-    std::string UnparseFilms(const std::set<int>& films) {
+    std::string UnparseFilms(const std::set<int>& films)
+    {
         if (films.empty()) return "";
         std::string result;
-        for (auto id : films) {
+        for (auto id : films)
+        {
             result += std::to_string(id) + '|';
         }
         result.pop_back();

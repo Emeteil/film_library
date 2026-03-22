@@ -66,13 +66,10 @@ namespace FilmLibrary
         return result;
     }
 
-    // --- Явные инстанциации шаблонных методов ---
-
     template <>
     CsvParseResult<Movie> CsvParser::LoadFromFile<Movie, MovieCsvMapper>(const std::string& filePath)
     {
         CsvParseResult<Movie> result;
-        // TODO: Реализовать загрузку CSV.
         std::ifstream file(filePath);
         if (!file.is_open())
         {
@@ -81,21 +78,28 @@ namespace FilmLibrary
         }
         std::string line;
         std::getline(file, line);        
-        int i = 0;
+        int i = 1;
         while (std::getline(file, line))
         {
             if (line.empty()) continue;
-            i++;
             auto fields = SplitCsvLine(line);
             try
             {
                 auto movie = MovieCsvMapper::FromFields(fields, i);
-                result.records.push_back(move(movie));
+                if (movie != nullptr)
+                {
+                    result.records.push_back(move(movie));
+                }
+                else
+                {
+                    result.errors.push_back("Error parsing line " + std::to_string(i));
+                }
             }
-            catch(const std::exception& e)
+            catch(const std::exception& e) 
             {
-                std::cerr << e.what() << '\n';
+                result.errors.push_back("Exception parsing line " + std::to_string(i) + ": " + std::string(e.what()));
             }
+            i++;
         }
         file.close();
         return result;
@@ -104,7 +108,6 @@ namespace FilmLibrary
     template <>
     bool CsvParser::SaveToFile<Movie, MovieCsvMapper>(const std::string& filePath, const std::vector<std::unique_ptr<Movie>>& records)
     {
-        // TODO: Реализовать сохранение в CSV.
         std::ofstream file(filePath);
         if (!file.is_open()) 
         {
@@ -124,7 +127,6 @@ namespace FilmLibrary
     template <>
     CsvParseResult<Actor> CsvParser::LoadFromFile<Actor, ActorCsvMapper>(const std::string& filePath)
     {
-        // TODO: Реализовать загрузку CSV актёров.
         CsvParseResult<Actor> result;
         std::ifstream file(filePath);
         if (!file.is_open())
@@ -138,17 +140,24 @@ namespace FilmLibrary
         while (std::getline(file, line))
         {
             if (line.empty()) continue;
-            i++;
             auto fields = SplitCsvLine(line);
             try
             {
                 auto actor = ActorCsvMapper::FromFields(fields, i);
-                result.records.push_back(move(actor));
+                if (actor != nullptr)
+                {
+                    result.records.push_back(move(actor));
+                }
+                else
+                {
+                    result.errors.push_back("Error parsing line " + std::to_string(i));
+                }
             }
-            catch(const std::exception& e)
+            catch(const std::exception& e) 
             {
-                std::cerr << e.what() << '\n';
+                result.errors.push_back("Exception parsing line " + std::to_string(i) + ": " + std::string(e.what()));
             }
+            i++;
         }
         file.close();
         return result;
@@ -157,7 +166,6 @@ namespace FilmLibrary
     template <>
     bool CsvParser::SaveToFile<Actor, ActorCsvMapper>(const std::string& filePath, const std::vector<std::unique_ptr<Actor>>& records)
     {
-        // TODO: Реализовать сохранение актёров в CSV.
         std::ofstream file(filePath);
         if (!file.is_open()) 
         {

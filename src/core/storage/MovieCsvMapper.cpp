@@ -38,11 +38,12 @@ namespace FilmLibrary
         return tokens;
     }
 
-    std::unique_ptr<Movie> MovieCsvMapper::FromFields(const std::vector<std::string>& fields, int lineNumber)
+    std::unique_ptr<Movie> MovieCsvMapper::FromFields(const std::vector<std::string>& fields, int)
     {
         if (fields.size() < 11) return nullptr;
         auto movie = std::make_unique<Movie>();
-        try {
+        try
+        {
             movie->id = std::stoi(fields[0]);
             movie->title = fields[1];
             movie->studio = fields[2];
@@ -57,8 +58,7 @@ namespace FilmLibrary
         }
         catch(const std::exception& e)
         {
-            std::string msg = "Error line " + std::to_string(lineNumber) + " : " + e.what() + '\n';
-            throw std::runtime_error(msg);
+            return nullptr;
         }
         return movie;
     }

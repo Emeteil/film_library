@@ -13,8 +13,6 @@
 #include <vector>
 #include <filesystem>
 
-// TODO: Реализовать тесты после имплементации CsvParser.
-
 TEST(CsvParser_SplitCsvLine)
 {
     std::string string1 = "1997,Ford,E350,\"ac, abs, moon\",3000.00";
@@ -48,9 +46,7 @@ void CreateTestFile(const std::string& filePath, const std::string& content) {
 
 TEST(CsvParser_LoadAndSaveRoundTrip)
 {
-    // TODO: Создать вектор Movie, сохранить в CSV, загрузить обратно.
-    //       Сравнить данные - они должны совпадать.
-    std::string testFile = "roundTrip.csv";
+    std::string testFile = "roundTrip.csv.test";
 
     std::vector<std::unique_ptr<FilmLibrary::Movie>> OriginalData;
     auto movie = std::make_unique<FilmLibrary::Movie>();
@@ -71,19 +67,17 @@ TEST(CsvParser_LoadAndSaveRoundTrip)
 
 TEST(CsvParser_HandleMalformedLines)
 {
-    // TODO: Файл с битыми строками.
-    //       Проверить, что хорошие строки загружены, ошибки в result.errors.
-    std::string testFile = "badData.csv";
+    std::string testFile = "badData.csv.test";
     CreateTestFile(testFile, "id,title,year\n badid,SomeTitle,badyear");
     auto result = FilmLibrary::CsvParser::LoadFromFile<FilmLibrary::Movie, FilmLibrary::MovieCsvMapper>(testFile);  
-    ASSERT_EQ(result.records.size(), 1); 
-    ASSERT_EQ(result.errors.size(), 0);
+    ASSERT_EQ(result.records.size(), 0); 
+    ASSERT_EQ(result.errors.size(), 1);
     std::filesystem::remove(testFile);
 }
 
 TEST(CsvParser_EmptyFile)
 {
-    std::string testFile = "empty.csv";
+    std::string testFile = "empty.csv.test";
     CreateTestFile(testFile, "");
     auto result = FilmLibrary::CsvParser::LoadFromFile<FilmLibrary::Movie, FilmLibrary::MovieCsvMapper>(testFile);  
     ASSERT_EQ(result.records.size(), 0);
@@ -93,7 +87,7 @@ TEST(CsvParser_EmptyFile)
 
 TEST(CsvParser_FileNotFound)
 {
-    auto result = FilmLibrary::CsvParser::LoadFromFile<FilmLibrary::Movie, FilmLibrary::MovieCsvMapper>("mega_file.csv");  
+    auto result = FilmLibrary::CsvParser::LoadFromFile<FilmLibrary::Movie, FilmLibrary::MovieCsvMapper>("mega_file.csv.test");  
     ASSERT_EQ(result.records.size(), 0);
     ASSERT_EQ(result.errors.size(), 1);
 }
