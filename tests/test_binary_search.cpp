@@ -48,16 +48,16 @@ TEST(BinarySearch_LowerBound)
     std::vector<Movie*> ptrs;
     for (auto& m : movies) ptrs.push_back(&m);
 
-    // Точное совпадение — первый элемент с этим значением
+    // Точное совпадение - первый элемент с этим значением
     ASSERT_EQ(BinarySearch::LowerBound(ptrs, 5.0, ratingGetter), std::size_t(2));
 
-    // Между значениями — возвращает индекс следующего большего
+    // Между значениями - возвращает индекс следующего большего
     ASSERT_EQ(BinarySearch::LowerBound(ptrs, 4.0, ratingGetter), std::size_t(2));
 
-    // Меньше всех — первый элемент
+    // Меньше всех - первый элемент
     ASSERT_EQ(BinarySearch::LowerBound(ptrs, 0.0, ratingGetter), std::size_t(0));
 
-    // Больше всех — возвращает size (элемент не найден)
+    // Больше всех - возвращает size (элемент не найден)
     ASSERT_EQ(BinarySearch::LowerBound(ptrs, 10.0, ratingGetter), std::size_t(5));
 
     // Ровно первый элемент
@@ -114,19 +114,19 @@ TEST(BinarySearch_UpperBound)
     std::vector<Movie*> ptrs;
     for (auto& m : movies) ptrs.push_back(&m);
 
-    // Первый элемент > 5.0 — это 7.0 на индексе 3
+    // Первый элемент > 5.0 - это 7.0 на индексе 3
     ASSERT_EQ(BinarySearch::UpperBound(ptrs, 5.0, ratingGetter), std::size_t(3));
 
-    // Между значениями — первый элемент > 4.0 это 5.0 на индексе 2
+    // Между значениями - первый элемент > 4.0 это 5.0 на индексе 2
     ASSERT_EQ(BinarySearch::UpperBound(ptrs, 4.0, ratingGetter), std::size_t(2));
 
-    // Меньше всех — первый элемент > 0 это 1.0 на индексе 0
+    // Меньше всех - первый элемент > 0 это 1.0 на индексе 0
     ASSERT_EQ(BinarySearch::UpperBound(ptrs, 0.0, ratingGetter), std::size_t(0));
 
-    // Последний элемент — первый > 9.0 не существует, возвращает size
+    // Последний элемент - первый > 9.0 не существует, возвращает size
     ASSERT_EQ(BinarySearch::UpperBound(ptrs, 9.0, ratingGetter), std::size_t(5));
 
-    // Больше всех — возвращает size
+    // Больше всех - возвращает size
     ASSERT_EQ(BinarySearch::UpperBound(ptrs, 10.0, ratingGetter), std::size_t(5));
 }
 
@@ -139,9 +139,9 @@ TEST(BinarySearch_UpperBound_Duplicates)
     std::vector<Movie*> ptrs;
     for (auto& m : movies) ptrs.push_back(&m);
 
-    // Первый индекс после всех 3.0 — индекс 3
+    // Первый индекс после всех 3.0 - индекс 3
     ASSERT_EQ(BinarySearch::UpperBound(ptrs, 3.0, ratingGetter), std::size_t(3));
-    // Первый индекс после всех 7.0 — size = 5
+    // Первый индекс после всех 7.0 - size = 5
     ASSERT_EQ(BinarySearch::UpperBound(ptrs, 7.0, ratingGetter), std::size_t(5));
 }
 
@@ -206,7 +206,7 @@ TEST(BinarySearch_NoElementsInRange)
     auto result = BinarySearch::FindInRange(ptrs, 6.0, 9.0, ratingGetter);
     ASSERT_TRUE(result.empty());
 
-    // Между двух значений — ни один элемент не попадает
+    // Между двух значений - ни один элемент не попадает
     auto result2 = BinarySearch::FindInRange(ptrs, 2.0, 2.9, ratingGetter);
     ASSERT_TRUE(result2.empty());
 }
@@ -234,7 +234,7 @@ TEST(BinarySearch_FindInRange_InvertedRange)
     std::vector<Movie*> ptrs;
     for (auto& m : movies) ptrs.push_back(&m);
 
-    // low > high — результат должен быть пустым
+    // low > high - результат должен быть пустым
     auto result = BinarySearch::FindInRange(ptrs, 7.0, 3.0, ratingGetter);
     ASSERT_TRUE(result.empty());
 }

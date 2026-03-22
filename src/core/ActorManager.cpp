@@ -83,7 +83,7 @@ namespace FilmLibrary
         // TODO: Реализовать перестройку индекса и авто-сохранение.
         //
         // 1. Собрать сырые указатели в std::vector<Actor*>.
-        // 2. idIndex.BuildTree(pointers) — ключи извлекаются через KeyExtractor.
+        // 2. idIndex.BuildTree(pointers) - ключи извлекаются через KeyExtractor.
         // 3. SaveToCsv();
     }
 }
