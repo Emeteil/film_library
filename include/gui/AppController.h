@@ -40,6 +40,9 @@ namespace FilmLibrary
             /// @brief Получить текущий список фильмов для отображения в таблице.
             const std::vector<Movie*>& GetDisplayMovies();
 
+            /// @brief Получить текущий список актёров для отображения в таблице.
+            const std::vector<Actor*>& GetDisplayActors();
+
             std::size_t GetMovieCount() const;
 
             /// @brief Получить актёра по ID.
@@ -47,6 +50,10 @@ namespace FilmLibrary
 
             /// @brief Получить всех актёров.
             const std::vector<std::unique_ptr<Actor>>& GetAllActors() const;
+
+            int AddActor(Actor data);
+            bool UpdateActor(int id, const Actor& data);
+            bool DeleteActor(int id);
 
             /// @brief Режим поиска.
             enum class SearchMode
@@ -56,14 +63,17 @@ namespace FilmLibrary
                 ByYear,
                 ByDescription,
                 ByGenre,
+                ByName, // Для актёров
                 None
             };
 
             /// @brief Выполнить поиск.
             void PerformSearch(SearchMode mode, const std::string& query);
+            void PerformActorSearch(const std::string& query);
 
             /// @brief Сбросить результаты поиска.
             void ClearSearch();
+            void ClearActorSearch();
 
             void FilterByRatingRange(double low, double high);
             void FilterByLengthRange(int low, int high);
@@ -75,11 +85,14 @@ namespace FilmLibrary
                 Rating,
                 Year,
                 Title,
+                Name, // Для актёров
                 None
             };
 
             void SetSort(SortKey key, bool ascending = true);
+            void SetActorSort(SortKey key, bool ascending = true);
             void ClearSort();
+            void ClearActorSort();
 
         private:
             DataManager dataManager;
@@ -90,8 +103,13 @@ namespace FilmLibrary
             std::vector<Movie*> displayMovies;
             bool displayDirty = true;
 
+            std::vector<Actor*> displayActors;
+            bool actorDisplayDirty = true;
+
             SearchMode currentSearchMode = SearchMode::None;
             std::string currentSearchQuery;
+
+            std::string currentActorSearchQuery;
 
             bool isRatingFilterActive = false;
             double ratingFilterLow = 0.0;
@@ -104,7 +122,11 @@ namespace FilmLibrary
             SortKey currentSortKey = SortKey::None;
             bool currentSortAscending = true;
 
+            SortKey currentActorSortKey = SortKey::None;
+            bool currentActorSortAscending = true;
+
             /// @brief Пересобрать displayMovies на основе текущих фильтров/сортировки.
             void RefreshDisplayList();
+            void RefreshActorDisplayList();
     };
 }

@@ -68,6 +68,16 @@ namespace FilmLibrary
         return displayMovies;
     }
 
+    const std::vector<Actor*>& AppController::GetDisplayActors()
+    {
+        if (actorDisplayDirty)
+        {
+            RefreshActorDisplayList();
+            actorDisplayDirty = false;
+        }
+        return displayActors;
+    }
+
     std::size_t AppController::GetMovieCount() const
     {
         return dataManager.GetMovieCount();
@@ -83,6 +93,27 @@ namespace FilmLibrary
         return actorManager.GetAllActors();
     }
 
+    int AppController::AddActor(Actor data)
+    {
+        int id = actorManager.AddActor(std::move(data));
+        actorDisplayDirty = true;
+        return id;
+    }
+
+    bool AppController::UpdateActor(int id, const Actor& data)
+    {
+        bool ok = actorManager.UpdateActor(id, data);
+        if (ok) actorDisplayDirty = true;
+        return ok;
+    }
+
+    bool AppController::DeleteActor(int id)
+    {
+        bool ok = actorManager.DeleteActor(id);
+        if (ok) actorDisplayDirty = true;
+        return ok;
+    }
+
     void AppController::PerformSearch(SearchMode mode, const std::string& query)
     {
         currentSearchMode = mode;
@@ -90,11 +121,23 @@ namespace FilmLibrary
         displayDirty = true;
     }
 
+    void AppController::PerformActorSearch(const std::string& query)
+    {
+        currentActorSearchQuery = query;
+        actorDisplayDirty = true;
+    }
+
     void AppController::ClearSearch()
     {
         currentSearchMode = SearchMode::None;
         currentSearchQuery.clear();
         displayDirty = true;
+    }
+
+    void AppController::ClearActorSearch()
+    {
+        currentActorSearchQuery.clear();
+        actorDisplayDirty = true;
     }
 
     void AppController::FilterByRatingRange(double low, double high)
@@ -131,6 +174,19 @@ namespace FilmLibrary
     {
         currentSortKey = SortKey::None;
         displayDirty = true;
+    }
+
+    void AppController::SetActorSort(SortKey key, bool ascending)
+    {
+        currentActorSortKey = key;
+        currentActorSortAscending = ascending;
+        actorDisplayDirty = true;
+    }
+
+    void AppController::ClearActorSort()
+    {
+        currentActorSortKey = SortKey::None;
+        actorDisplayDirty = true;
     }
 
     void AppController::RefreshDisplayList()
@@ -234,6 +290,30 @@ namespace FilmLibrary
             {
                 QuickSort::Sort(displayMovies, [asc = currentSortAscending](const Movie* a, const Movie* b) {
                     return asc ? (a->title < b->title) : (a->title > b->title);
+                });
+            }
+        }
+    }
+
+    void AppController::RefreshActorDisplayList()
+    {
+        displayActors.clear();
+        for (const auto& a : actorManager.GetAllActors())
+        {
+            if (!currentActorSearchQuery.empty())
+            {
+                if (a->name.find(currentActorSearchQuery) == std::string::npos)
+                    continue;
+            }
+            displayActors.push_back(a.get());
+        }
+
+        if (currentActorSortKey != SortKey::None)
+        {
+            if (currentActorSortKey == SortKey::Name)
+            {
+                QuickSort::Sort(displayActors, [asc = currentActorSortAscending](const Actor* a, const Actor* b) {
+                    return asc ? (a->name < b->name) : (a->name > b->name);
                 });
             }
         }
