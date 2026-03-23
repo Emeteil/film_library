@@ -99,18 +99,14 @@ namespace FilmLibrary
 
     bool DataManager::UpdateMovie(int id, const Movie& updatedData)
     {
-        auto it = std::find_if(movies.begin(), movies.end(),
-            [id](const std::unique_ptr<Movie>& movie) {
-                return movie && movie->id == id;
-            });
+        Movie* movie = indexManager.GetMovieById(id);
         
-        if (it == movies.end())
+        if (!movie)
         {
             Logger::Instance().Warning("Cannot update movie: ID " + std::to_string(id) + " not found");
             return false;
         }
         
-        Movie* movie = it->get();
         movie->title = updatedData.title;
         movie->studio = updatedData.studio;
         movie->description = updatedData.description;
@@ -131,18 +127,22 @@ namespace FilmLibrary
 
     bool DataManager::DeleteMovie(int id)
     {
-                auto it = std::find_if(movies.begin(), movies.end(),
-            [id](const std::unique_ptr<Movie>& movie) {
-                return movie && movie->id == id;
-            });
+        Movie* moviePtr = indexManager.GetMovieById(id);
         
-        if (it == movies.end())
+        if (!moviePtr)
         {
             Logger::Instance().Warning("Cannot delete movie: ID " + std::to_string(id) + " not found");
             return false;
         }
         
-        movies.erase(it);
+        for (auto it = movies.begin(); it != movies.end(); ++it)
+        {
+            if (it->get() == moviePtr)
+            {
+                movies.erase(it);
+                break;
+            }
+        }
         
         OnDataChanged();
         
@@ -152,14 +152,7 @@ namespace FilmLibrary
 
     const Movie* DataManager::GetMovieById(int id) const
     {
-        auto it = std::find_if(movies.begin(), movies.end(),[id](const std::unique_ptr<Movie>& movie) { return movie && movie->id == id; });
-        
-        if (it != movies.end())
-        {
-            return it->get();
-        }
-        
-        return nullptr;
+        return indexManager.GetMovieById(id);
     }
     
 
