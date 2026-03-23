@@ -19,7 +19,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <urlmon.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "urlmon.lib")
+#endif
 #endif
 
 struct AsyncImageLoader {
