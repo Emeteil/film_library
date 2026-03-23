@@ -80,3 +80,16 @@ TEST(RabinKarp_UnicodeText)
     auto result = RabinKarp::Search(text, pattern);
     ASSERT_EQ(result.size(), 2);
 }
+
+TEST(RabinKarp_CaseInsensitivity)
+{
+    std::string text = "Hello World";
+    
+    auto result1 = RabinKarp::Search(text, "world");
+    ASSERT_EQ(result1.size(), 1);
+    ASSERT_EQ(result1[0], 6);
+    
+    auto result2 = RabinKarp::Search(text, "HELLO");
+    ASSERT_EQ(result2.size(), 1);
+    ASSERT_EQ(result2[0], 0);
+}

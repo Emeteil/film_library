@@ -99,14 +99,15 @@ namespace FilmLibrary
 
     bool ActorManager::UpdateActor(int id, const Actor& data)
     {
-        auto it = std::find_if(actors.begin(), actors.end(),[id](const std::unique_ptr<Actor>& actor) { return actor && actor->id == id; });
+        auto results = idIndex.Find(id);
         
-        if (it == actors.end())
+        if (results.empty())
         {
             Logger::Instance().Warning("Cannot update actor: ID " + std::to_string(id) + " not found");
             return false;
         }
-        Actor* actor = it->get();
+
+        Actor* actor = results[0];
         actor->name = data.name;
         actor->description = data.description;
         actor->birthdate = data.birthdate;
@@ -122,15 +123,23 @@ namespace FilmLibrary
 
     bool ActorManager::DeleteActor(int id)
     {
-        auto it = std::find_if(actors.begin(), actors.end(),[id](const std::unique_ptr<Actor>& actor) { return actor && actor->id == id; });
+        auto results = idIndex.Find(id);
         
-        if (it == actors.end())
+        if (results.empty())
         {
             Logger::Instance().Warning("Cannot delete actor: ID " + std::to_string(id) + " not found");
             return false;
         }
         
-        actors.erase(it);
+        Actor* actorPtr = results[0];
+        for (auto it = actors.begin(); it != actors.end(); ++it)
+        {
+            if (it->get() == actorPtr)
+            {
+                actors.erase(it);
+                break;
+            }
+        }
         
         OnDataChanged();
         

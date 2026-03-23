@@ -41,12 +41,6 @@ namespace FilmLibrary
             /// Вес каждого уникального ключа = количество значений с этим ключом.
             void BuildTree(const std::vector<T>& values);
 
-            /// @brief Построить оптимальное дерево из явных ключей и весов.
-            ///
-            /// Ключи ДОЛЖНЫ быть отсортированы по возрастанию.
-            /// Значения (T) не сохраняются - только структура дерева.
-            void BuildTree(const std::vector<Key>& keys, const std::vector<int>& weights);
-
             /// @brief Очистить дерево (удалить все узлы и матрицы).
             void Clear();
 
@@ -56,41 +50,6 @@ namespace FilmLibrary
             /// @brief Найти все значения, ключ которых начинается с prefix.
             ///        Применимо только для строковых ключей.
             std::vector<T> FindByPrefix(const Key& prefix) const;
-
-            /// @brief Найти все значения с ключом в диапазоне [low, high].
-            std::vector<T> FindInRange(const Key& low, const Key& high) const;
-
-            /// @brief Получить все значения при обходе in-order.
-            std::vector<T> InOrderTraversal() const;
-
-            /// @return Количество узлов (уникальных ключей) в дереве.
-            std::size_t Size() const;
-
-            /// @return true, если дерево пустое.
-            bool Empty() const;
-
-            /// @return Высота дерева.
-            int Height() const;
-
-            /// @return Контрольная сумма (сумма всех весов в дереве).
-            int CheckSum() const;
-
-            /// @return Средневзвешенная высота дерева.
-            double AverageWeightedHeight() const;
-
-            /// @brief Проверить корректность алгоритма:
-            ///        AP[0,n] / AW[0,n] должно быть ≈ AverageWeightedHeight().
-            /// @return true если значения совпадают (с точностью 0.0001).
-            bool VerifyAlgorithm() const;
-
-            /// @brief Доступ к матрице AW (для тестирования).
-            const std::vector<std::vector<int>>& GetAW() const;
-
-            /// @brief Доступ к матрице AP (для тестирования).
-            const std::vector<std::vector<int>>& GetAP() const;
-
-            /// @brief Доступ к матрице AR (для тестирования).
-            const std::vector<std::vector<int>>& GetAR() const;
 
         private:
             struct Node
@@ -118,18 +77,10 @@ namespace FilmLibrary
             void BuildTreeRecursive(Node** p, const std::vector<Key>& keys, const std::vector<std::vector<T>>& allValues, const std::vector<int>& weights, int L, int R);
 
             void DestroyTree(Node* node);
-            int HeightRecursive(Node* node) const;
-            int CheckSumRecursive(Node* node) const;
-
-            void CalculateWeightedHeight(Node* node, int currentHeight, int& totalWeightedHeight, int& totalWeight) const;
 
             void FindNode(Node* node, const Key& key, std::vector<T>& result) const;
 
             void FindByPrefixNode(Node* node, const Key& prefix, std::vector<T>& result) const;
-
-            void FindInRangeNode(Node* node, const Key& low, const Key& high, std::vector<T>& result) const;
-
-            void InOrderNode(Node* node, std::vector<T>& result) const;
     };
 }
 

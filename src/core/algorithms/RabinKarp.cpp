@@ -3,6 +3,8 @@
 
 #include "core/algorithms/RabinKarp.h"
 #include <functional>
+#include <algorithm>
+#include <cctype>
 
 namespace FilmLibrary
 {
@@ -13,15 +15,20 @@ namespace FilmLibrary
         if (pattern.empty() || text.length() < pattern.length())
             return result;
 
-        std::size_t n = text.length();
-        std::size_t m = pattern.length();
-        std::size_t patternHash = ComputeHash(pattern, 0, m);
+        std::string lowerText = text;
+        std::string lowerPattern = pattern;
+        std::transform(lowerText.begin(), lowerText.end(), lowerText.begin(), [](unsigned char c){ return std::tolower(c); });
+        std::transform(lowerPattern.begin(), lowerPattern.end(), lowerPattern.begin(), [](unsigned char c){ return std::tolower(c); });
+
+        std::size_t n = lowerText.length();
+        std::size_t m = lowerPattern.length();
+        std::size_t patternHash = ComputeHash(lowerPattern, 0, m);
 
         for (std::size_t i = 0; i <= n - m; i++)
         {
-            if (ComputeHash(text, i, m) == patternHash)
+            if (ComputeHash(lowerText, i, m) == patternHash)
             {
-                if (text.compare(i, m, pattern) == 0)
+                if (lowerText.compare(i, m, lowerPattern) == 0)
                     result.push_back(i);
             }
         }

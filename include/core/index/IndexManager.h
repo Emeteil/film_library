@@ -52,7 +52,11 @@ namespace FilmLibrary
                 const std::vector<std::unique_ptr<Movie>>& movies,
                 const std::string& genre) const;
 
+            /// @brief Найти фильм по ID.
+            Movie* GetMovieById(int id) const;
+
         private:
+            OptimalBST<Movie*, int> idIndex;
             OptimalBST<Movie*, std::string> titleIndex;
             OptimalBST<Movie*, std::string> studioIndex;
             OptimalBST<Movie*, int> yearIndex;
