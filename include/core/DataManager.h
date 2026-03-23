@@ -75,6 +75,9 @@ namespace FilmLibrary
             /// @brief Получить фильмы, отсортированные по названию.
             const std::vector<Movie*>& GetSortedByTitle(bool ascending = true);
 
+            /// @brief Получить фильмы, отсортированные по длительности.
+            const std::vector<Movie*>& GetSortedByLength(bool ascending = true);
+
         private:
             std::vector<std::unique_ptr<Movie>> movies;
             IndexManager indexManager;

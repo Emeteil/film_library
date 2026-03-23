@@ -65,11 +65,11 @@ namespace FilmLibrary
             controller.FilterByRatingRange(ratingRange[0], ratingRange[1]);
         }
 
-        static int lengthRange[2] = { 0, 7200 };
-        ImGui::DragInt2("Length Range", lengthRange, 60);
+        static int lengthRange[2] = { 0, 180 };
+        ImGui::DragInt2("Length Range (min)", lengthRange, 1);
         if (ImGui::Button("Apply Length Filter"))
         {
-            controller.FilterByLengthRange(lengthRange[0], lengthRange[1]);
+            controller.FilterByLengthRange(lengthRange[0] * 60, lengthRange[1] * 60);
         }
 
         if (ImGui::Button("Clear All Filters"))
@@ -80,14 +80,20 @@ namespace FilmLibrary
         ImGui::Separator();
 
         static int sortKeyIdx = 0;
-        const char* sortKeys[] = { "Rating", "Year", "Title", "None" };
+        const char* sortKeys[] = { "Rating", "Year", "Title", "Length", "None" };
         ImGui::Combo("Sort Key", &sortKeyIdx, sortKeys, IM_ARRAYSIZE(sortKeys));
         static bool ascending = true;
         ImGui::Checkbox("Ascending", &ascending);
         if (ImGui::Button("Apply Sort"))
         {
-            AppController::SortKey key = static_cast<AppController::SortKey>(sortKeyIdx);
-            controller.SetSort(key, ascending);
+            AppController::SortKey keys[] = {
+                AppController::SortKey::Rating,
+                AppController::SortKey::Year,
+                AppController::SortKey::Title,
+                AppController::SortKey::Length,
+                AppController::SortKey::None
+            };
+            controller.SetSort(keys[sortKeyIdx], ascending);
         }
 
         ImGui::End();

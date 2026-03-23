@@ -234,6 +234,17 @@ namespace FilmLibrary
         return sortCache.GetSorted(key, movies, comparator);
     }
 
+    const std::vector<Movie*>& DataManager::GetSortedByLength(bool ascending)
+    {
+        std::string key = "length_" + std::to_string(ascending);
+        
+        auto comparator = [ascending](const Movie* a, const Movie* b) -> bool {
+            return ascending ? a->length < b->length : a->length > b->length;
+        };
+        
+        return sortCache.GetSorted(key, movies, comparator);
+    }
+
     void DataManager::OnDataChanged()
     {
         indexManager.Rebuild(movies);
