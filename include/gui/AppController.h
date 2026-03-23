@@ -85,6 +85,7 @@ namespace FilmLibrary
                 Rating,
                 Year,
                 Title,
+                Length,
                 Name, // Для актёров
                 None
             };

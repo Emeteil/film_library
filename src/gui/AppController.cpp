@@ -5,6 +5,7 @@
 #include "gui/widgets/NotificationManager.h"
 #include "core/utils/Logger.h"
 #include "core/algorithms/QuickSort.h"
+#include "core/algorithms/RabinKarp.h"
 
 namespace FilmLibrary
 {
@@ -246,6 +247,8 @@ namespace FilmLibrary
                     displayMovies = dataManager.GetSortedByYear(currentSortAscending);
                 else if (currentSortKey == SortKey::Title)
                     displayMovies = dataManager.GetSortedByTitle(currentSortAscending);
+                else if (currentSortKey == SortKey::Length)
+                    displayMovies = dataManager.GetSortedByLength(currentSortAscending);
                 return;
             }
             
@@ -292,6 +295,12 @@ namespace FilmLibrary
                     return asc ? (a->title < b->title) : (a->title > b->title);
                 });
             }
+            else if (currentSortKey == SortKey::Length)
+            {
+                QuickSort::Sort(displayMovies, [asc = currentSortAscending](const Movie* a, const Movie* b) {
+                    return asc ? (a->length < b->length) : (a->length > b->length);
+                });
+            }
         }
     }
 
@@ -302,7 +311,7 @@ namespace FilmLibrary
         {
             if (!currentActorSearchQuery.empty())
             {
-                if (a->name.find(currentActorSearchQuery) == std::string::npos)
+                if (!RabinKarp::Contains(a->name, currentActorSearchQuery))
                     continue;
             }
             displayActors.push_back(a.get());
