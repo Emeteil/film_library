@@ -8,6 +8,11 @@
 
 namespace FilmLibrary
 {
+    inline std::size_t sz(std::size_t base, int offset = 0)
+    {
+        return static_cast<std::size_t>(static_cast<int>(base) + offset);
+    }
+
     template <typename T, typename Key>
     OptimalBST<T, Key>::OptimalBST(KeyExtractor keyExtractor) : keyExtractor(keyExtractor)
     {
@@ -71,46 +76,46 @@ namespace FilmLibrary
             sortedValues.push_back(pair.second);
         }
 
-        n = static_cast<int>(sortedKeys.size());
+        n = sortedKeys.size();
         ComputeMatrices(weights);
         BuildTreeRecursive(&root, sortedKeys, sortedValues, weights, 0, n);
-        nodeCount = static_cast<std::size_t>(n);
+        nodeCount = n;
     }
 
     template <typename T, typename Key>
     void OptimalBST<T, Key>::ComputeMatrices(const std::vector<int>& weights)
     {
-        matrixAW.assign(static_cast<std::size_t>(n + 1), std::vector<int>(static_cast<std::size_t>(n + 1), 0));
-        matrixAP.assign(static_cast<std::size_t>(n + 1), std::vector<int>(static_cast<std::size_t>(n + 1), 0));
-        matrixAR.assign(static_cast<std::size_t>(n + 1), std::vector<int>(static_cast<std::size_t>(n + 1), 0));
+        matrixAW.assign(n + 1, std::vector<int>(n + 1, 0));
+        matrixAP.assign(n + 1, std::vector<int>(n + 1, 0));
+        matrixAR.assign(n + 1, std::vector<std::size_t>(n + 1, 0));
 
-        for (int i = 0; i <= n; i++)
+        for (std::size_t i = 0; i <= n; i++)
         {
-            matrixAW[static_cast<std::size_t>(i)][static_cast<std::size_t>(i)] = 0;
-            for (int j = i + 1; j <= n; j++)
+            matrixAW[i][i] = 0;
+            for (std::size_t j = i + 1; j <= n; j++)
             {
-                matrixAW[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] = matrixAW[static_cast<std::size_t>(i)][static_cast<std::size_t>(j - 1)] + weights[static_cast<std::size_t>(j - 1)];
+                matrixAW[i][j] = matrixAW[i][sz(j, -1)] + weights[sz(j, -1)];
             }
         }
 
-        for (int i = 0; i < n; i++)
+        for (std::size_t i = 0; i < n; i++)
         {
-            int j = i + 1;
-            matrixAP[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] = matrixAW[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)];
-            matrixAR[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] = j;
+            std::size_t j = i + 1;
+            matrixAP[i][j] = matrixAW[i][j];
+            matrixAR[i][j] = j;
         }
 
-        for (int h = 2; h <= n; h++)
+        for (std::size_t h = 2; h <= n; h++)
         {
-            for (int i = 0; i <= n - h; i++)
+            for (std::size_t i = 0; i <= n - h; i++)
             {
-                int j = i + h;
-                int m = matrixAR[static_cast<std::size_t>(i)][static_cast<std::size_t>(j - 1)];
-                int minVal = matrixAP[static_cast<std::size_t>(i)][static_cast<std::size_t>(m - 1)] + matrixAP[static_cast<std::size_t>(m)][static_cast<std::size_t>(j)];
+                std::size_t j = i + h;
+                std::size_t m = matrixAR[i][sz(j, -1)];
+                int minVal = matrixAP[i][sz(m, -1)] + matrixAP[m][j];
 
-                for (int k = m + 1; k <= matrixAR[static_cast<std::size_t>(i + 1)][static_cast<std::size_t>(j)]; k++)
+                for (std::size_t k = m + 1; k <= matrixAR[i + 1][j]; k++)
                 {
-                    int x = matrixAP[static_cast<std::size_t>(i)][static_cast<std::size_t>(k - 1)] + matrixAP[static_cast<std::size_t>(k)][static_cast<std::size_t>(j)];
+                    int x = matrixAP[i][sz(k, -1)] + matrixAP[k][j];
                     if (x < minVal)
                     {
                         m = k;
@@ -118,26 +123,26 @@ namespace FilmLibrary
                     }
                 }
 
-                matrixAP[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] = minVal + matrixAW[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)];
-                matrixAR[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] = m;
+                matrixAP[i][j] = minVal + matrixAW[i][j];
+                matrixAR[i][j] = m;
             }
         }
     }
 
     template <typename T, typename Key>
-    void OptimalBST<T, Key>::BuildTreeRecursive(Node** p, const std::vector<Key>& keys, const std::vector<std::vector<T>>& allValues, const std::vector<int>& weights, int L, int R)
+    void OptimalBST<T, Key>::BuildTreeRecursive(Node** p, const std::vector<Key>& keys, const std::vector<std::vector<T>>& allValues, const std::vector<int>& weights, std::size_t L, std::size_t R)
     {
         if (L < R)
         {
-            int k = matrixAR[static_cast<std::size_t>(L)][static_cast<std::size_t>(R)];
+            std::size_t k = matrixAR[L][R];
             *p = new Node();
-            (*p)->key = keys[static_cast<std::size_t>(k - 1)];
-            (*p)->values = allValues[static_cast<std::size_t>(k - 1)];
-            (*p)->weight = weights[static_cast<std::size_t>(k - 1)];
+            (*p)->key = keys[sz(k, -1)];
+            (*p)->values = allValues[sz(k, -1)];
+            (*p)->weight = weights[sz(k, -1)];
             (*p)->left = nullptr;
             (*p)->right = nullptr;
 
-            BuildTreeRecursive(&(*p)->left, keys, allValues, weights, L, k - 1);
+            BuildTreeRecursive(&(*p)->left, keys, allValues, weights, L, sz(k, -1));
             BuildTreeRecursive(&(*p)->right, keys, allValues, weights, k, R);
         }
     }

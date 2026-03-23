@@ -63,18 +63,18 @@ namespace FilmLibrary
 
             Node* root = nullptr;
             std::size_t nodeCount = 0;
-            int n = 0;
+            std::size_t n = 0;
             KeyExtractor keyExtractor;
 
             std::vector<std::vector<int>> matrixAW;
             std::vector<std::vector<int>> matrixAP;
-            std::vector<std::vector<int>> matrixAR;
+            std::vector<std::vector<std::size_t>> matrixAR;
 
             /// @brief Вычислить матрицы AW, AP, AR.
             void ComputeMatrices(const std::vector<int>& weights);
 
             /// @brief Рекурсивное построение дерева из матрицы AR.
-            void BuildTreeRecursive(Node** p, const std::vector<Key>& keys, const std::vector<std::vector<T>>& allValues, const std::vector<int>& weights, int L, int R);
+            void BuildTreeRecursive(Node** p, const std::vector<Key>& keys, const std::vector<std::vector<T>>& allValues, const std::vector<int>& weights, std::size_t L, std::size_t R);
 
             void DestroyTree(Node* node);
 
