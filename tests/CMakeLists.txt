@@ -5,6 +5,10 @@ add_executable(film_library_tests
     test_binary_search.cpp
     test_rabin_karp.cpp
     test_csv_parser.cpp
+    test_sort_cache.cpp
+    test_data_manager.cpp
+    test_index_manager.cpp
+    test_app_controller.cpp
 )
 
 target_link_libraries(film_library_tests PRIVATE

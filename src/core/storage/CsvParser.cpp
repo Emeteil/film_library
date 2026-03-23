@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <filesystem>
 
 namespace FilmLibrary
 {
@@ -108,6 +109,13 @@ namespace FilmLibrary
     template <>
     bool CsvParser::SaveToFile<Movie, MovieCsvMapper>(const std::string& filePath, const std::vector<std::unique_ptr<Movie>>& records)
     {
+        if (!filePath.empty())
+        {
+            std::filesystem::path p(filePath);
+
+            if (p.has_parent_path() && !std::filesystem::exists(p.parent_path()))
+                std::filesystem::create_directories(p.parent_path());
+        }
         std::ofstream file(filePath);
         if (!file.is_open()) 
         {
@@ -166,6 +174,13 @@ namespace FilmLibrary
     template <>
     bool CsvParser::SaveToFile<Actor, ActorCsvMapper>(const std::string& filePath, const std::vector<std::unique_ptr<Actor>>& records)
     {
+        if (!filePath.empty())
+        {
+            std::filesystem::path p(filePath);
+            
+            if (p.has_parent_path() && !std::filesystem::exists(p.parent_path()))
+                std::filesystem::create_directories(p.parent_path());
+        }
         std::ofstream file(filePath);
         if (!file.is_open()) 
         {

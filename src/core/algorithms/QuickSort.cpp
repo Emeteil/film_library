@@ -1,3 +1,6 @@
+#ifndef CORE_ALGORITHMS_QUICKSORT_CPP
+#define CORE_ALGORITHMS_QUICKSORT_CPP
+
 /// @file QuickSort.cpp
 /// @brief Реализация быстрой сортировки (Хоара).
 
@@ -76,3 +79,5 @@ namespace FilmLibrary
         }
     }   
 }
+
+#endif
