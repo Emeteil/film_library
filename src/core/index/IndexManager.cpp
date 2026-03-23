@@ -11,7 +11,8 @@
 namespace FilmLibrary
 {
     IndexManager::IndexManager() 
-        : titleIndex([](Movie* const& m) -> std::string { return m->title; })
+        : idIndex([](Movie* const& m) -> int { return m->id; })
+        , titleIndex([](Movie* const& m) -> std::string { return m->title; })
         , studioIndex([](Movie* const& m) -> std::string { return m->studio; })
         , yearIndex([](Movie* const& m) -> int { return m->year; })
     {
@@ -28,6 +29,7 @@ namespace FilmLibrary
             pointers.push_back(m.get());
         }
 
+        idIndex.BuildTree(pointers);
         titleIndex.BuildTree(pointers);
         studioIndex.BuildTree(pointers);
         yearIndex.BuildTree(pointers);
@@ -83,6 +85,12 @@ namespace FilmLibrary
                 result.push_back(m.get());
         }
         return result;
+    }
+
+    Movie* IndexManager::GetMovieById(int id) const
+    {
+        auto results = idIndex.Find(id);
+        return results.empty() ? nullptr : results[0];
     }
 
     void IndexManager::RebuildSortedVectors(const std::vector<std::unique_ptr<Movie>>& movies)
