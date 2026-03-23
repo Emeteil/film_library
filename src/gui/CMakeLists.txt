@@ -18,3 +18,7 @@ target_link_libraries(film_library_gui PUBLIC
     film_library_core
     imgui
 )
+
+if(WIN32)
+    target_link_libraries(film_library_gui PUBLIC urlmon)
+endif()
