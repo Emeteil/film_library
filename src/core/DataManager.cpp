@@ -4,6 +4,7 @@
 #include "core/DataManager.h"
 #include "core/storage/CsvParser.h"
 #include "core/utils/Logger.h"
+#include "core/storage/MovieCsvMapper.h"
 
 #include <algorithm>
 
@@ -14,71 +15,153 @@ namespace FilmLibrary
 
     std::vector<std::string> DataManager::LoadFromCsv(const std::string& filePath)
     {
-        csvFilePath = filePath;
+         csvFilePath = filePath;
+        std::vector<std::string> errors;
 
-        // TODO: Реализовать загрузку.
-        //
-        // 1. Вызвать CsvParser::LoadFromFile(filePath).
-        // 2. Перенести movies из результата в this->movies.
-        // 3. Найти максимальный id и установить nextId = max + 1.
-        // 4. Вызвать OnDataChanged() для построения индексов (без авто-сохранения при загрузке).
-        // 5. Залогировать результат.
-        // 6. Вернуть список ошибок.
+        auto result = CsvParser::LoadFromFile<Movie, MovieCsvMapper>(filePath);
 
-        (void)filePath;
-        return {};
+        errors = result.errors;
+        
+        if (!result.errors.empty())
+        {
+            Logger::Instance().Warning("Loaded movies with errors: " + std::to_string(result.errors.size()));
+            for (const auto& err : result.errors)
+            {
+                Logger::Instance().Error(err);
+            }
+        }
+
+        movies = std::move(result.records);
+
+        int maxId = 0;
+        for (const auto& movie : movies)
+        {
+            if (movie && movie->id > maxId)
+            {
+                maxId = movie->id;
+            }
+        }
+        nextId = maxId + 1;
+        
+        std::vector<Movie*> pointers;
+        pointers.reserve(movies.size());
+        for (const auto& movie : movies)
+        {
+            if (movie)
+            {
+                pointers.push_back(movie.get());
+            }
+        }
+
+        indexManager.Rebuild(movies);
+        sortCache.Invalidate();
+
+        Logger::Instance().Info("Loaded " + std::to_string(movies.size()) + " movies from " + filePath);
+        
+        return errors;
     }
 
     bool DataManager::SaveToCsv() const
     {
-        // TODO: Делегировать CsvParser::SaveToFile(csvFilePath, movies).
-        return false;
+        if (csvFilePath.empty())
+        {
+            Logger::Instance().Error("Cannot save movies: CSV file path is empty");
+            return false;
+        }
+        
+        bool success = CsvParser::SaveToFile<Movie, MovieCsvMapper>(csvFilePath, movies);
+        
+        if (success)
+        {
+            Logger::Instance().Info("Saved " + std::to_string(movies.size()) + " movies to " + csvFilePath);
+        }
+        else
+        {
+            Logger::Instance().Error("Failed to save movies to " + csvFilePath);
+        }
+        
+        return success;
     }
 
     int DataManager::AddMovie(Movie movieData)
     {
-        // TODO: Реализовать добавление.
-        //
-        // 1. Назначить movieData.id = nextId++.
-        // 2. Создать unique_ptr и добавить в movies.
-        // 3. Вызвать OnDataChanged().
-        // 4. Вернуть id.
-
-        (void)movieData;
-        return -1;
+        movieData.id = nextId++;
+        
+        auto movie = std::make_unique<Movie>(std::move(movieData));
+        int newId = movie->id;
+        movies.push_back(std::move(movie));
+        
+        OnDataChanged();
+        
+        Logger::Instance().Info("Added movie with ID: " + std::to_string(newId));
+        return newId;
     }
 
     bool DataManager::UpdateMovie(int id, const Movie& updatedData)
     {
-        // TODO: Реализовать обновление.
-        //
-        // 1. Найти фильм по id в movies.
-        // 2. Обновить все поля (кроме id).
-        // 3. Вызвать OnDataChanged().
-
-        (void)id;
-        (void)updatedData;
-        return false;
+        auto it = std::find_if(movies.begin(), movies.end(),
+            [id](const std::unique_ptr<Movie>& movie) {
+                return movie && movie->id == id;
+            });
+        
+        if (it == movies.end())
+        {
+            Logger::Instance().Warning("Cannot update movie: ID " + std::to_string(id) + " not found");
+            return false;
+        }
+        
+        Movie* movie = it->get();
+        movie->title = updatedData.title;
+        movie->studio = updatedData.studio;
+        movie->description = updatedData.description;
+        movie->year = updatedData.year;
+        movie->length = updatedData.length;
+        movie->rating = updatedData.rating;
+        movie->cover = updatedData.cover;
+        movie->streamLink = updatedData.streamLink;
+        movie->genres = updatedData.genres;
+        movie->actorIds = updatedData.actorIds;
+        
+        OnDataChanged();
+        
+        Logger::Instance().Info("Updated movie with ID: " + std::to_string(id));
+        return true;
     }
+    
 
     bool DataManager::DeleteMovie(int id)
     {
-        // TODO: Реализовать удаление.
-        //
-        // 1. Найти фильм по id в movies.
-        // 2. Удалить из вектора (erase-remove idiom с unique_ptr).
-        // 3. Вызвать OnDataChanged().
-
-        (void)id;
-        return false;
+                auto it = std::find_if(movies.begin(), movies.end(),
+            [id](const std::unique_ptr<Movie>& movie) {
+                return movie && movie->id == id;
+            });
+        
+        if (it == movies.end())
+        {
+            Logger::Instance().Warning("Cannot delete movie: ID " + std::to_string(id) + " not found");
+            return false;
+        }
+        
+        movies.erase(it);
+        
+        OnDataChanged();
+        
+        Logger::Instance().Info("Deleted movie with ID: " + std::to_string(id));
+        return true;
     }
 
     const Movie* DataManager::GetMovieById(int id) const
     {
-        // TODO: Линейный поиск по вектору movies.
-        (void)id;
+        auto it = std::find_if(movies.begin(), movies.end(),[id](const std::unique_ptr<Movie>& movie) { return movie && movie->id == id; });
+        
+        if (it != movies.end())
+        {
+            return it->get();
+        }
+        
         return nullptr;
     }
+    
 
     const std::vector<std::unique_ptr<Movie>>& DataManager::GetAllMovies() const
     {
@@ -127,32 +210,43 @@ namespace FilmLibrary
 
     const std::vector<Movie*>& DataManager::GetSortedByRating(bool ascending)
     {
-        // TODO: Делегировать SortCache::GetSorted() с соответствующим компаратором.
-        (void)ascending;
-        static std::vector<Movie*> empty;
-        return empty;
+        std::string key = "rating_" + std::to_string(ascending);
+            
+        auto comparator = [ascending](const Movie* a, const Movie* b) -> bool {
+            return ascending ? a->rating < b->rating : a->rating > b->rating;
+        };
+            
+        return sortCache.GetSorted(key, movies, comparator);
     }
 
     const std::vector<Movie*>& DataManager::GetSortedByYear(bool ascending)
     {
-        (void)ascending;
-        static std::vector<Movie*> empty;
-        return empty;
+        std::string key = "year_" + std::to_string(ascending);
+        
+        auto comparator = [ascending](const Movie* a, const Movie* b) -> bool {
+            return ascending ? a->year < b->year : a->year > b->year;
+        };
+        
+        return sortCache.GetSorted(key, movies, comparator);
     }
 
     const std::vector<Movie*>& DataManager::GetSortedByTitle(bool ascending)
     {
-        (void)ascending;
-        static std::vector<Movie*> empty;
-        return empty;
+        std::string key = "title_" + std::to_string(ascending);
+        
+        auto comparator = [ascending](const Movie* a, const Movie* b) -> bool {
+            return ascending ? a->title < b->title : a->title > b->title;
+        };
+        
+        return sortCache.GetSorted(key, movies, comparator);
     }
 
     void DataManager::OnDataChanged()
     {
-        // TODO: Реализовать перестройку индексов, сброс кэша и авто-сохранение.
-        //
-        // 1. indexManager.Rebuild(movies);
-        // 2. sortCache.Invalidate();
-        // 3. SaveToCsv();
+        indexManager.Rebuild(movies);
+        
+        sortCache.Invalidate();
+        
+        SaveToCsv();
     }
 }
