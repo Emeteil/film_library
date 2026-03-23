@@ -7,6 +7,76 @@
 #include <im_anim.h>
 #include <random>
 #include <chrono>
+#include <ctime>
+#include <string>
+#include <cstdlib>
+#include <thread>
+#include <atomic>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "../../../third_party/stb/stb_image.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <urlmon.h>
+#pragma comment(lib, "urlmon.lib")
+#endif
+
+struct AsyncImageLoader {
+    std::atomic<bool> downloading{false};
+    std::atomic<bool> ready{false};
+    std::atomic<bool> failed{false};
+    unsigned char* data = nullptr;
+    int w = 0, h = 0, channels = 0;
+    GLuint texture = 0;
+
+    void StartDownload(const char* url) {
+        if (downloading || ready || texture || failed) return;
+        downloading = true;
+
+        std::thread([this, u = std::string(url)]() {
+            const char* temp_file = "img_download_async.png";
+            
+        #ifdef _WIN32
+            HRESULT hr = URLDownloadToFileA(NULL, u.c_str(), temp_file, 0, NULL);
+            if (hr != S_OK) {
+                this->failed = true;
+                this->downloading = false;
+                return;
+            }
+        #else
+            std::string cmd = std::string("curl -s -L -o ") + temp_file + " \"" + u + "\"";
+            std::system(cmd.c_str());
+        #endif
+
+            this->data = stbi_load(temp_file, &this->w, &this->h, &this->channels, 4);
+            std::remove(temp_file);
+            
+            if (!this->data) {
+                this->failed = true;
+            } else {
+                this->ready = true;
+            }
+            
+            this->downloading = false;
+        }).detach();
+    }
+
+    void UpdateGL() {
+        if (ready && data && !texture) {
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+            data = nullptr;
+            ready = false;
+        }
+    }
+};
+
+static AsyncImageLoader g_AsyncImg;
 
 namespace FilmLibrary
 {
@@ -19,17 +89,38 @@ namespace FilmLibrary
 
         // тестовое окно с анимацией
         ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Animation Debug", nullptr);
+        ImGui::SetNextWindowSize(ImVec2(350, 580), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Animation Debug & Network Image", nullptr);
         
         float dt = ImGui::GetIO().DeltaTime;
+        
         float wiggle_x = iam_wiggle(ImGui::GetID("wiggle_text"), 5.0f, 2.0f, dt);
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + wiggle_x);
-        ImGui::TextColored(ImVec4(0.2f, 0.8f, 1.0f, 1.0f), "Animated Debug Text");
+        ImGui::TextColored(ImVec4(0.2f, 0.8f, 1.0f, 1.0f), "Animated Wiggle Text");
+        ImGui::Spacing();
         
         float pulse = iam_oscillate(ImGui::GetID("pulse_btn"), 10.0f, 1.5f, iam_wave_sine, 0.0f, dt);
         if (ImGui::Button("Close App", ImVec2(150 + pulse, 30)))
             glfwSetWindowShouldClose(window, true);
+        ImGui::Spacing();
+        
+        if (ImGui::Button("Trigger Shake")) {
+            iam_trigger_shake(ImGui::GetID("shake_btn"));
+        }
+        float shake_x = iam_shake(ImGui::GetID("shake_btn"), 20.0f, 15.0f, 1.0f, dt);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + shake_x);
+        ImGui::Button("Shaking Button");
+        ImGui::Spacing();
+
+        g_AsyncImg.StartDownload("https://i.pinimg.com/736x/21/51/67/2151677298c48a01365cbd31980a6797.jpg");
+        g_AsyncImg.UpdateGL();
+
+        if (g_AsyncImg.texture) {
+            ImGui::Separator();
+            ImGui::Text("Network Image:");
+            ImGui::Image((void*)(intptr_t)g_AsyncImg.texture, ImVec2((float)200, (float)200));
+        }
+
         ImGui::End();
 
         // поиск, фильтры
@@ -138,13 +229,19 @@ namespace FilmLibrary
         ImGui::Begin("Movies Table", nullptr);
         
         const auto& movies = controller.GetDisplayMovies();
-        if (ImGui::BeginTable("movies_table", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable))
+        if (ImGui::BeginTable("movies_table", 11, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY))
         {
             ImGui::TableSetupColumn("ID");
             ImGui::TableSetupColumn("Title");
             ImGui::TableSetupColumn("Year");
             ImGui::TableSetupColumn("Rating");
             ImGui::TableSetupColumn("Length");
+            ImGui::TableSetupColumn("Studio");
+            ImGui::TableSetupColumn("Description");
+            ImGui::TableSetupColumn("Cover");
+            ImGui::TableSetupColumn("Stream Link");
+            ImGui::TableSetupColumn("Genres");
+            ImGui::TableSetupColumn("Actors");
             ImGui::TableHeadersRow();
 
             for (const auto* m : movies)
@@ -155,6 +252,18 @@ namespace FilmLibrary
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%d", m->year);
                 ImGui::TableSetColumnIndex(3); ImGui::Text("%.1f", m->rating);
                 ImGui::TableSetColumnIndex(4); ImGui::Text("%d min", m->length / 60);
+                ImGui::TableSetColumnIndex(5); ImGui::Text("%s", m->studio.c_str());
+                ImGui::TableSetColumnIndex(6); ImGui::Text("%s", m->description.c_str());
+                ImGui::TableSetColumnIndex(7); ImGui::Text("%s", m->cover.c_str());
+                ImGui::TableSetColumnIndex(8); ImGui::Text("%s", m->streamLink.c_str());
+                
+                std::string genresStr;
+                for (size_t i = 0; i < m->genres.size(); ++i) {
+                    genresStr += m->genres[i];
+                    if (i < m->genres.size() - 1) genresStr += ", ";
+                }
+                ImGui::TableSetColumnIndex(9); ImGui::Text("%s", genresStr.c_str());
+                ImGui::TableSetColumnIndex(10); ImGui::Text("%zu", m->actorIds.size());
             }
             ImGui::EndTable();
         }
@@ -166,11 +275,14 @@ namespace FilmLibrary
         ImGui::Begin("Actors Table", nullptr);
 
         const auto& actors = controller.GetDisplayActors();
-        if (ImGui::BeginTable("actors_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable))
+        if (ImGui::BeginTable("actors_table", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY))
         {
             ImGui::TableSetupColumn("ID");
             ImGui::TableSetupColumn("Name");
             ImGui::TableSetupColumn("Films Count");
+            ImGui::TableSetupColumn("Description");
+            ImGui::TableSetupColumn("Birthdate");
+            ImGui::TableSetupColumn("Photo");
             ImGui::TableHeadersRow();
 
             for (const auto* a : actors)
@@ -180,64 +292,18 @@ namespace FilmLibrary
                 ImGui::TableSetColumnIndex(0); ImGui::Text("%d", a->id);
                 ImGui::TableSetColumnIndex(1); ImGui::Text("%s", a->name.c_str());
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%zu", a->filmIds.size());
+                ImGui::TableSetColumnIndex(3); ImGui::Text("%s", a->description.c_str());
+                
+                std::time_t t = static_cast<std::time_t>(a->birthdate);
+                struct tm* tm = std::localtime(&t);
+                char dateBuf[32] = "N/A";
+                if (tm) {
+                    std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", tm);
+                }
+                ImGui::TableSetColumnIndex(4); ImGui::Text("%s", dateBuf);
+                ImGui::TableSetColumnIndex(5); ImGui::Text("%s", a->photo.c_str());
             }
             ImGui::EndTable();
-        }
-        ImGui::End();
-
-        // тестовая генерация
-        ImGui::SetNextWindowPos(ImVec2(20, 640), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(300, 100), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Random Generator", nullptr);
-
-        if (ImGui::Button("Generate Random Movie + Actors", ImVec2(-FLT_MIN, 40)))
-        {
-            static const std::vector<std::string> titles = {"Interstellar", "Inception", "The Dark Knight", "Tenet", "Dunkirk", "Memento"};
-            static const std::vector<std::string> studios = {"Warner Bros", "Universal", "Paramount", "Sony", "Disney"};
-            static const std::vector<std::string> actorNames = {"Tom Hardy", "Cillian Murphy", "Emma Stone", "Brad Pitt", "Leo DiCaprio"};
-            
-            static std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
-            std::uniform_int_distribution<> dTitle(0, static_cast<int>(titles.size() - 1));
-            std::uniform_int_distribution<> dStudio(0, static_cast<int>(studios.size() - 1));
-            std::uniform_int_distribution<> dActor(0, static_cast<int>(actorNames.size() - 1));
-            std::uniform_int_distribution<> dYear(1990, 2024);
-            std::uniform_real_distribution<> dRating(1.0, 10.0);
-            std::uniform_int_distribution<> dLength(3600, 10800);
-            std::uniform_int_distribution<> dNumActors(1, 3);
-
-            Movie movie;
-            movie.title = titles[static_cast<std::size_t>(dTitle(gen))] + " " + std::to_string(gen() % 100);
-            movie.studio = studios[static_cast<std::size_t>(dStudio(gen))];
-            movie.year = dYear(gen);
-            movie.rating = dRating(gen);
-            movie.length = dLength(gen);
-            movie.description = "Generated description for " + movie.title;
-            
-            int numActors = dNumActors(gen);
-            for (int i = 0; i < numActors; ++i)
-            {
-                Actor actor;
-                actor.name = actorNames[static_cast<std::size_t>(dActor(gen))] + " " + std::to_string(gen() % 100);
-                actor.description = "Generated actor info";
-                actor.birthdate = 631152000; // 1990 approx
-                
-                int newActorId = controller.AddActor(std::move(actor));
-                movie.actorIds.push_back(newActorId);
-            }
-            
-            int newMovieId = controller.AddMovie(std::move(movie));
-            
-            // Связываем назад
-            for (int aid : movie.actorIds)
-            {
-                const Actor* a = controller.GetActorById(aid);
-                if (a)
-                {
-                    Actor updated = *a;
-                    updated.filmIds.insert(newMovieId);
-                    controller.UpdateActor(aid, updated);
-                }
-            }
         }
         ImGui::End();
 

@@ -15,21 +15,25 @@ namespace FilmLibrary
         if (pattern.empty() || text.length() < pattern.length())
             return result;
 
-        std::string lowerText = text;
-        std::string lowerPattern = pattern;
-        std::transform(lowerText.begin(), lowerText.end(), lowerText.begin(), [](unsigned char c){ return std::tolower(c); });
-        std::transform(lowerPattern.begin(), lowerPattern.end(), lowerPattern.begin(), [](unsigned char c){ return std::tolower(c); });
-
-        std::size_t n = lowerText.length();
-        std::size_t m = lowerPattern.length();
-        std::size_t patternHash = ComputeHash(lowerPattern, 0, m);
+        std::size_t n = text.length();
+        std::size_t m = pattern.length();
+        std::size_t patternHash = ComputeHash(pattern, 0, m);
 
         for (std::size_t i = 0; i <= n - m; i++)
         {
-            if (ComputeHash(lowerText, i, m) == patternHash)
+            if (ComputeHash(text, i, m) == patternHash)
             {
-                if (lowerText.compare(i, m, lowerPattern) == 0)
-                    result.push_back(i);
+                bool match = true;
+                for (std::size_t j = 0; j < m; ++j)
+                {
+                    if (std::tolower(static_cast<unsigned char>(text[i + j])) != std::tolower(static_cast<unsigned char>(pattern[j])))
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                
+                if (match) result.push_back(i);
             }
         }
 
@@ -48,6 +52,11 @@ namespace FilmLibrary
 
     std::size_t RabinKarp::ComputeHash(const std::string& str, std::size_t start, std::size_t length)
     {
-        return std::hash<std::string>{}(str.substr(start, length));
+        std::size_t h = 0;
+        for (std::size_t i = 0; i < length; ++i)
+        {
+            h = h * 31 + std::tolower(static_cast<unsigned char>(str[start + i]));
+        }
+        return h;
     }
 }
