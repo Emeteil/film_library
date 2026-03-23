@@ -24,3 +24,5 @@ data/*.csv
 data/*.csv.example
 
 imgui.ini
+
+databases/
