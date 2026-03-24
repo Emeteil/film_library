@@ -89,7 +89,7 @@ namespace FilmLibrary
                 auto movie = MovieCsvMapper::FromFields(fields, i);
                 if (movie != nullptr)
                 {
-                    result.records.push_back(move(movie));
+                    result.records.push_back(std::move(movie));
                 }
                 else
                 {
@@ -154,7 +154,7 @@ namespace FilmLibrary
                 auto actor = ActorCsvMapper::FromFields(fields, i);
                 if (actor != nullptr)
                 {
-                    result.records.push_back(move(actor));
+                    result.records.push_back(std::move(actor));
                 }
                 else
                 {
