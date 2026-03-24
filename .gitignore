@@ -20,6 +20,7 @@ logs/
 
 .DS_Store
 Thumbs.db
+Realizes.db
 
 data/*.csv
 data/*.csv.example
