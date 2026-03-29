@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.10)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -18,6 +17,8 @@ add_library(film_library_gui STATIC
     widgets/ConfirmDialog.cpp
     widgets/NotificationManager.cpp
 )
+
+target_compile_options(film_library_gui PRIVATE -Wno-unused-variable -Wno-unused-parameter)
 
 target_include_directories(film_library_gui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
