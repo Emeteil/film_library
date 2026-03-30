@@ -15,8 +15,8 @@ namespace FilmLibrary
 
     void MovieTableWidget::SetOnColumnClick(OnColumnClickCallback cb, void* ud)
     {
-        onColumnClick        = cb;
-        columnClickUserData  = ud;
+        onColumnClick = cb;
+        columnClickUserData = ud;
     }
 
     void MovieTableWidget::Render(const std::vector<Movie*>& movies)

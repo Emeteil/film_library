@@ -18,13 +18,11 @@ namespace FilmLibrary
         return inst;
     }
 
-    void NotificationManager::Push(NotificationType type,
-                                   const std::string& message,
-                                   float durationSec)
+    void NotificationManager::Push(NotificationType type, const std::string& message, float durationSec)
     {
         Notification n;
-        n.type          = type;
-        n.message       = message;
+        n.type = type;
+        n.message = message;
         n.remainingTime = durationSec;
         notifications.push_back(n);
     }
@@ -33,12 +31,12 @@ namespace FilmLibrary
     {
         if (notifications.empty()) return;
 
-        float dt      = ImGui::GetIO().DeltaTime;
-        float dw      = ImGui::GetIO().DisplaySize.x;
-        float dh      = ImGui::GetIO().DisplaySize.y;
-        float toastW  = 340.0f;
-        float padR    = 18.0f;
-        float padB    = 18.0f;
+        float dt = ImGui::GetIO().DeltaTime;
+        float dw = ImGui::GetIO().DisplaySize.x;
+        float dh = ImGui::GetIO().DisplaySize.y;
+        float toastW = 340.0f;
+        float padR = 18.0f;
+        float padB = 18.0f;
         float toastH  = 56.0f;
         float gap     = 8.0f;
 
@@ -78,13 +76,21 @@ namespace FilmLibrary
             ImU32 accent;
             switch (n.type)
             {
-            case NotificationType::Success: accent = IM_COL32(60, 180, 80, 255);  break;
-            case NotificationType::Warning: accent = IM_COL32(220, 160, 40, 255); break;
-            case NotificationType::Error:   accent = IM_COL32(200, 60, 60, 255);  break;
-            default:                        accent = IM_COL32(80, 140, 220, 255); break;
+                case NotificationType::Success:
+                    accent = IM_COL32(60, 180, 80, 255);
+                    break;
+                case NotificationType::Warning:
+                    accent = IM_COL32(220, 160, 40, 255);
+                    break;
+                case NotificationType::Error:
+                    accent = IM_COL32(200, 60, 60, 255);
+                    break;
+                default:
+                    accent = IM_COL32(80, 140, 220, 255);
+                    break;
             }
 
-            ImU32 bgCol  = IM_COL32(15, 14, 10, (int)(240 * fade));
+            ImU32 bgCol = IM_COL32(15, 14, 10, (int)(240 * fade));
             ImU32 bordCol = IM_COL32(60, 48, 16, (int)(200 * fade));
 
             dl->AddRectFilled(

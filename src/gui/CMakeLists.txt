@@ -10,9 +10,13 @@ endif()
 add_library(film_library_gui STATIC
     AppWindow.cpp
     AppController.cpp
+    ImageLoader.cpp
     widgets/MainWidget.cpp
+    widgets/HomeTab.cpp
+    widgets/FilmsTab.cpp
+    widgets/ActorsTab.cpp
+    widgets/GuiUtils.cpp
     widgets/MovieTableWidget.cpp
-    widgets/SearchPanel.cpp
     widgets/MovieFormDialog.cpp
     widgets/ConfirmDialog.cpp
     widgets/NotificationManager.cpp
