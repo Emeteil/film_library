@@ -110,11 +110,10 @@ namespace FilmLibrary
         RenderAppHeader();
         RenderTabBar(dt);
 
-        float padX = 18.0f;
-        float padY = 10.0f;
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + padX);
-        float contentW = ImGui::GetWindowWidth() - padX * 2;
-        float contentH = ImGui::GetContentRegionAvail().y - padY;
+        ImGui::SetCursorPos({0, ImGui::GetCursorPosY()});
+        
+        float contentW = ImGui::GetWindowWidth();
+        float contentH = ImGui::GetContentRegionAvail().y;
 
         ImGui::BeginChild("##content", {contentW, contentH}, false);
 
@@ -136,11 +135,5 @@ namespace FilmLibrary
         ImGui::PopStyleVar(3);
 
         NotificationManager::Instance().Render();
-
-        static int frameCounter = 0;
-        if (++frameCounter % 600 == 0)
-        {
-            iam_gc();
-        }
     }
 }

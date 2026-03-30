@@ -42,6 +42,8 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.h")
         ${IMGUI_DIR}/backends
     )
 
+    target_compile_definitions(imgui PUBLIC IMGUI_USE_WCHAR32)
+
     target_link_libraries(imgui PUBLIC glfw)
 
     if(WIN32 OR MINGW OR CYGWIN)

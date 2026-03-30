@@ -9,6 +9,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
+#include <cstdio>
 
 namespace FilmLibrary
 {
@@ -57,9 +58,61 @@ namespace FilmLibrary
         ImFontConfig fontConfig;
         fontConfig.OversampleH = 3;
         fontConfig.OversampleV = 3;
-        io.Fonts->AddFontFromFileTTF(
-            "third_party/imgui/misc/fonts/Roboto-Medium.ttf",
-            16.0f, &fontConfig, io.Fonts->GetGlyphRangesCyrillic());
+        const char* customFont = "fonts/NotoSans-Bold.ttf";
+        const char* fallbackFont = "NotoSans-Bold.ttf";
+
+        FILE* f1 = std::fopen(customFont, "rb");
+        if (f1)
+        {
+            std::fclose(f1);
+            io.Fonts->AddFontFromFileTTF(customFont, 16.0f, &fontConfig, io.Fonts->GetGlyphRangesCyrillic());
+        }
+        else
+        {
+            FILE* f2 = std::fopen(fallbackFont, "rb");
+            if (f2)
+            {
+                std::fclose(f2);
+                io.Fonts->AddFontFromFileTTF(fallbackFont, 16.0f, &fontConfig, io.Fonts->GetGlyphRangesCyrillic());
+            }
+            else
+            {
+                io.Fonts->AddFontDefault();
+            }
+        }
+
+        static const ImWchar emoji_ranges[] = {
+            0x2000, 0x2BFF,
+            0x2600, 0x27BF,
+            0x1F000, 0x1FAD6,
+            0
+        };
+
+        const char* emojiFont = "fonts/NotoEmoji.ttf";
+        const char* fallbackEmojiFont = "NotoEmoji.ttf";
+        FILE* f3 = std::fopen(emojiFont, "rb");
+        if (f3)
+        {
+            std::fclose(f3);
+            ImFontConfig emojiConfig;
+            emojiConfig.MergeMode = true;
+            emojiConfig.OversampleH = 1;
+            emojiConfig.OversampleV = 1;
+            io.Fonts->AddFontFromFileTTF(emojiFont, 16.0f, &emojiConfig, emoji_ranges);
+        }
+        else
+        {
+            FILE* f4 = std::fopen(fallbackEmojiFont, "rb");
+            if (f4)
+            {
+                std::fclose(f4);
+                ImFontConfig emojiConfig;
+                emojiConfig.MergeMode = true;
+                emojiConfig.OversampleH = 1;
+                emojiConfig.OversampleV = 1;
+                io.Fonts->AddFontFromFileTTF(fallbackEmojiFont, 16.0f, &emojiConfig, emoji_ranges);
+            }
+        }
 
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 330");

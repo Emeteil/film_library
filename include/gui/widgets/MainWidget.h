@@ -13,6 +13,10 @@ namespace FilmLibrary
         int activeTab = 0;
         int filmSelected = -1;
         int actorSelected = -1;
+        
+        int filmVisitCounter = 0;
+        int actorVisitCounter = 0;
+        int homeVisitCounter = 0;
     };
 
     class HomeTab;

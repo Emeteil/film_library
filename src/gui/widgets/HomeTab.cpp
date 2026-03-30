@@ -60,6 +60,9 @@ namespace FilmLibrary
             return;
         }
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(32.0f, 24.0f));
+        ImGui::BeginChild("##home_content", {0, 0}, ImGuiChildFlags_AlwaysUseWindowPadding, 0);
+
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
         float availW = ImGui::GetContentRegionAvail().x;
         float availH = ImGui::GetContentRegionAvail().y;
@@ -81,11 +84,9 @@ namespace FilmLibrary
                 coverH = coverW * ((float)h / w);
             }
 
-            ImGuiID texFadeId = ImGui::GetID(("cover_fade_" + std::to_string(tex)).c_str());
+            ImGuiID texFadeId = ImGui::GetID(("cover_fade_" + std::to_string(tex) + "_" + std::to_string(state.homeVisitCounter)).c_str());
             iam_ease_desc ez = {iam_ease_out_sine, 0, 0, 0, 0};
             float alpha = iam_tween_float(texFadeId, ImHashStr("alpha"), 1.0f, 0.5f, ez, iam_policy_crossfade, dt, 0.0f);
-
-            ImGui::GetWindowDrawList()->AddRectFilled({coverPos.x + 6, coverPos.y + 6}, {coverPos.x + coverW + 6, coverPos.y + coverH + 6}, IM_COL32(0, 0, 0, (int)(120 * alpha)), 8.0f);
 
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
             ImGui::Image((void*)(intptr_t)tex, {coverW, coverH});
@@ -101,20 +102,26 @@ namespace FilmLibrary
         float starOffX = (coverW - (13.0f + 2.0f) * 5) * 0.5f;
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + starOffX);
         GuiUtils::DrawStars((float)movie->rating);
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + starOffX);
+        
+        char ratStr[32];
+        snprintf(ratStr, sizeof(ratStr), "%.1f / 10", movie->rating);
+        float ratW = ImGui::CalcTextSize(ratStr).x;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (coverW - ratW) * 0.5f);
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.58f, 0.22f, 0.9f));
-        ImGui::Text("%.1f / 10", movie->rating);
+        ImGui::TextUnformatted(ratStr);
         ImGui::PopStyleColor();
 
         ImGui::EndGroup();
 
-        ImGui::SameLine(0, 20);
+        ImGui::SameLine(0, 32);
 
         ImGui::BeginGroup();
 
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.96f, 0.96f, 0.96f, 1.0f));
         ImGui::SetWindowFontScale(1.35f);
+        ImGui::PushTextWrapPos(0);
         ImGui::TextWrapped("%s", movie->title.c_str());
+        ImGui::PopTextWrapPos();
         ImGui::SetWindowFontScale(1.0f);
         ImGui::PopStyleColor();
 
@@ -159,10 +166,9 @@ namespace FilmLibrary
             GuiUtils::SectionTitle("В ролях");
             ImGui::Dummy({0, 4});
 
-            float actorAvatarSz = 56.0f;
-            float actorNameW = 90.0f;
-
-            ImGui::BeginChild("##actors_row", {0, actorAvatarSz + ImGui::GetTextLineHeightWithSpacing() * 2 + 12}, false, ImGuiWindowFlags_HorizontalScrollbar);
+            float actorCellSz = 86.0f;
+            float actorAvatarSz = 72.0f;
+            ImGui::BeginChild("##actors_row", {0, actorCellSz + ImGui::GetTextLineHeightWithSpacing() * 2 + 16}, false, ImGuiWindowFlags_HorizontalScrollbar);
 
             for (int actorId : movie->actorIds)
             {
@@ -170,25 +176,36 @@ namespace FilmLibrary
                 if (!actor) continue;
 
                 ImGui::BeginGroup();
+                ImVec2 cellPos = ImGui::GetCursorScreenPos();
+                
+                float px = cellPos.x + (actorCellSz - actorAvatarSz) * 0.5f;
+                float py = cellPos.y;
 
                 uint32_t atex = ImageLoader::GetOrLoadTexture(actor->photo);
-                ImVec2 apos = ImGui::GetCursorScreenPos();
-
                 if (atex)
                 {
                     ImGuiID fadeId = ImGui::GetID(("actor_fade_" + std::to_string(atex)).c_str());
                     iam_ease_desc ez = {iam_ease_out_sine, 0, 0, 0, 0};
                     float alpha = iam_tween_float(fadeId, ImHashStr("alpha"), 1.0f, 0.5f, ez, iam_policy_crossfade, dt, 0.0f);
 
-                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
-                    ImGui::Image((void*)(intptr_t)atex, {actorAvatarSz, actorAvatarSz});
-                    ImGui::PopStyleVar();
+                    float aw = actorAvatarSz;
+                    float ah = actorAvatarSz;
+                    int tw = 0, th = 0;
+                    if (ImageLoader::GetTextureSize(actor->photo, tw, th) && tw > 0 && th > 0)
+                    {
+                        if (tw > th) ah = aw * ((float)th / tw);
+                        else aw = ah * ((float)tw / th);
+                    }
+                    float ix = px + (actorAvatarSz - aw) * 0.5f;
+                    float iy = py + (actorAvatarSz - ah) * 0.5f;
+
+                    ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)atex, {ix, iy}, {ix + aw, iy + ah}, {0,0}, {1,1}, IM_COL32(255, 255, 255, (int)(255 * alpha)));
                 }
                 else
                 {
                     ImDrawList* adl = ImGui::GetWindowDrawList();
-                    adl->AddCircleFilled({apos.x + actorAvatarSz * 0.5f, apos.y + actorAvatarSz * 0.5f}, actorAvatarSz * 0.5f, IM_COL32(35, 28, 10, 255));
-                    adl->AddCircle({apos.x + actorAvatarSz * 0.5f, apos.y + actorAvatarSz * 0.5f}, actorAvatarSz * 0.5f, IM_COL32(90, 70, 25, 180), 32, 1.5f);
+                    adl->AddCircleFilled({px + actorAvatarSz * 0.5f, py + actorAvatarSz * 0.5f}, actorAvatarSz * 0.5f, IM_COL32(35, 28, 10, 255));
+                    adl->AddCircle({px + actorAvatarSz * 0.5f, py + actorAvatarSz * 0.5f}, actorAvatarSz * 0.5f, IM_COL32(90, 70, 25, 180), 32, 1.5f);
 
                     char initials[4] = "?";
                     if (!actor->name.empty())
@@ -203,40 +220,57 @@ namespace FilmLibrary
                         }
                     }
                     ImVec2 iSz = ImGui::CalcTextSize(initials);
-                    adl->AddText({apos.x + actorAvatarSz * 0.5f - iSz.x * 0.5f, apos.y + actorAvatarSz * 0.5f - iSz.y * 0.5f}, IM_COL32(200, 160, 60, 255), initials);
-
-                    ImGui::Dummy({actorAvatarSz, actorAvatarSz});
+                    adl->AddText({px + actorAvatarSz * 0.5f - iSz.x * 0.5f, py + actorAvatarSz * 0.5f - iSz.y * 0.5f}, IM_COL32(200, 160, 60, 255), initials);
                 }
 
-                ImGui::SetCursorScreenPos(apos);
+                ImGui::SetCursorScreenPos(cellPos);
+                ImGui::Dummy({actorCellSz, actorAvatarSz + ImGui::GetTextLineHeightWithSpacing() * 2});
+
+                ImGui::SetCursorScreenPos(cellPos);
                 ImGui::PushID(actorId);
 
                 ImGuiID btnId = ImGui::GetID("##actor_btn");
-                bool isHovered = ImGui::IsMouseHoveringRect(apos, {apos.x + actorAvatarSz, apos.y + actorAvatarSz});
+                bool isHovered = ImGui::IsMouseHoveringRect(cellPos, {cellPos.x + actorCellSz, cellPos.y + actorAvatarSz + ImGui::GetTextLineHeightWithSpacing() * 2});
                 float hovAlpha = iam_tween_float(btnId, ImHashStr("hov"), isHovered ? 1.0f : 0.0f, 0.2f, {iam_ease_out_quad, 0,0,0,0}, iam_policy_crossfade, dt, 0.0f);
 
                 if (hovAlpha > 0.01f)
                 {
-                    ImGui::GetWindowDrawList()->AddCircleFilled({apos.x + actorAvatarSz * 0.5f, apos.y + actorAvatarSz * 0.5f}, actorAvatarSz * 0.5f, IM_COL32(230, 184, 71, (int)(70 * hovAlpha)));
+                    ImGui::GetWindowDrawList()->AddRectFilled(cellPos, {cellPos.x + actorCellSz, cellPos.y + actorAvatarSz + ImGui::GetTextLineHeightWithSpacing() * 2}, IM_COL32(230, 184, 71, (int)(30 * hovAlpha)), 8.0f);
                 }
 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.72f, 0.28f, 0.35f));
-                if (ImGui::Button("##actor_btn", {actorAvatarSz, actorAvatarSz}))
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.9f, 0.72f, 0.28f, 0.15f));
+                if (ImGui::Button("##actor_btn", {actorCellSz, actorAvatarSz + ImGui::GetTextLineHeightWithSpacing() * 2}))
                 {
-                    state.actorSelected = actorId;
+                    if (state.actorSelected != actorId) {
+                        state.actorSelected = actorId;
+                        state.actorVisitCounter++;
+                    }
                     state.activeTab = 2;
                 }
                 ImGui::PopStyleColor(3);
                 ImGui::PopID();
 
                 std::string shortName = actor->name;
-                if (shortName.size() > 14) shortName = shortName.substr(0, 13) + "…";
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX());
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.78f, 0.78f, 0.82f, 1.0f));
-                ImGui::SetNextItemWidth(actorNameW);
-                ImGui::TextUnformatted(shortName.c_str());
+                size_t spacePos = shortName.find(' ');
+                std::string firstLine = shortName;
+                std::string secondLine = "";
+                if (spacePos != std::string::npos) {
+                    firstLine = shortName.substr(0, spacePos);
+                    secondLine = shortName.substr(spacePos + 1);
+                }
+
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.88f, 1.0f));
+                float w1 = ImGui::CalcTextSize(firstLine.c_str()).x;
+                ImGui::SetCursorScreenPos({cellPos.x + (actorCellSz - w1) * 0.5f, cellPos.y + actorAvatarSz + 4});
+                ImGui::TextUnformatted(firstLine.c_str());
+                
+                if (!secondLine.empty()) {
+                    float w2 = ImGui::CalcTextSize(secondLine.c_str()).x;
+                    ImGui::SetCursorScreenPos({cellPos.x + (actorCellSz - w2) * 0.5f, cellPos.y + actorAvatarSz + 4 + ImGui::GetTextLineHeight()});
+                    ImGui::TextUnformatted(secondLine.c_str());
+                }
                 ImGui::PopStyleColor();
 
                 ImGui::EndGroup();
@@ -256,18 +290,15 @@ namespace FilmLibrary
         float startX = (availW - totalW) * 0.5f;
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + startX);
 
-        bool canPrev = (homeIndex > 0);
-        bool canNext = (homeIndex < (int)homeStack.size() - 1);
-
-        if (!canPrev) ImGui::BeginDisabled();
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.12f, 0.05f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.50f, 0.38f, 0.12f, 1.0f));
         if (ImGui::Button("  < Назад  ", {btnW, 32}))
         {
             --homeIndex;
+            if (homeIndex < 0) homeIndex = (int)homeStack.size() - 1;
+            state.homeVisitCounter++;
         }
         ImGui::PopStyleColor(2);
-        if (!canPrev) ImGui::EndDisabled();
 
         ImGui::SameLine(0, 8);
 
@@ -277,15 +308,15 @@ namespace FilmLibrary
 
         ImGui::SameLine(0, 8);
 
-        if (!canNext) ImGui::BeginDisabled();
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.12f, 0.05f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.50f, 0.38f, 0.12f, 1.0f));
         if (ImGui::Button("  Вперёд >  ", {btnW, 32}))
         {
             ++homeIndex;
+            if (homeIndex >= (int)homeStack.size()) homeIndex = 0;
+            state.homeVisitCounter++;
         }
         ImGui::PopStyleColor(2);
-        if (!canNext) ImGui::EndDisabled();
 
         ImGui::SameLine(0, 20);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.10f, 0.10f, 0.12f, 1.0f));
@@ -296,9 +327,13 @@ namespace FilmLibrary
             ctrl.ClearFilter();
             const auto& all2 = ctrl.GetDisplayMovies();
             RebuildHomeStack(all2);
+            state.homeVisitCounter++;
         }
         ImGui::PopStyleColor(2);
 
+        ImGui::PopStyleVar();
+        
+        ImGui::EndChild();
         ImGui::PopStyleVar();
     }
 }

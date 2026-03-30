@@ -23,6 +23,6 @@ namespace FilmLibrary
 
             bool showFilters = false;
             float ratingRange[2] = {0.0f, 10.0f};
-            int lengthRange[2] = {0, 600};
+            int lengthRange[2] = {0, 36000};
     };
 }

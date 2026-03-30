@@ -15,7 +15,7 @@ namespace FilmLibrary
         ImDrawList* dl = ImGui::GetWindowDrawList();
         ImVec2 p = ImGui::GetCursorScreenPos();
         float rowH = 64.0f;
-        float w = ImGui::GetContentRegionAvail().x;
+        float w = ImGui::GetContentRegionAvail().x - 4;
 
         ImU32 bgCol = selected ? IM_COL32(55, 42, 12, 220) : IM_COL32(18, 17, 22, 200);
         ImU32 hoverCol = IM_COL32(35, 27, 8, 220);
@@ -88,6 +88,8 @@ namespace FilmLibrary
     {
         if (!m) 
         {
+            ImGui::Dummy({0, 20});
+            ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Выберите фильм из списка").x) * 0.5f);
             ImGui::TextDisabled("Выберите фильм из списка"); 
             return; 
         }
@@ -114,11 +116,9 @@ namespace FilmLibrary
         ImVec2 cp = ImGui::GetCursorScreenPos();
         if (tex)
         {
-            ImGuiID fadeId = ImGui::GetID(("detail_fade_" + std::to_string(tex)).c_str());
+            ImGuiID fadeId = ImGui::GetID(("detail_fade_" + std::to_string(m->id) + "_" + std::to_string(state.filmVisitCounter)).c_str());
             float alpha = iam_tween_float(fadeId, ImHashStr("alpha"), 1.0f, 0.4f, {iam_ease_out_sine, 0,0,0,0}, iam_policy_crossfade, ImGui::GetIO().DeltaTime, 0.0f);
 
-            ImGui::GetWindowDrawList()->AddRectFilled({cp.x + 5, cp.y + 5}, {cp.x + coverW + 5, cp.y + coverH + 5}, IM_COL32(0, 0, 0, (int)(100 * alpha)), 6.0f);
-            
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
             ImGui::Image((void*)(intptr_t)tex, {coverW, coverH});
             ImGui::PopStyleVar();
@@ -145,17 +145,25 @@ namespace FilmLibrary
         ImGui::PopStyleColor();
 
         ImGui::Dummy({0, 4});
-        GuiUtils::DrawStars((float)m->rating, 1.1f);
+        ImGui::BeginGroup();
+        GuiUtils::DrawStars((float)m->rating, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.58f, 0.22f, 0.9f));
-        ImGui::Text("%.1f / 10", m->rating);
+        char ratStr[32];
+        snprintf(ratStr, sizeof(ratStr), "%.1f / 10", m->rating);
+        float starW = (13.0f + 2.0f) * 5;
+        ImGui::SameLine(0, 10);
+        ImGui::TextUnformatted(ratStr);
         ImGui::PopStyleColor();
+        ImGui::EndGroup();
 
         ImGui::Dummy({0, 6});
 
+        ImGui::BeginGroup();
         for (const auto& g : m->genres)
         {
             GuiUtils::DrawGenreTag(g.c_str());
         }
+        ImGui::EndGroup();
         if (!m->genres.empty()) 
         {
             ImGui::NewLine(); 
@@ -167,7 +175,7 @@ namespace FilmLibrary
 
         GuiUtils::SectionTitle("Описание");
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.80f, 0.80f, 0.84f, 1.0f));
-        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
+        ImGui::PushTextWrapPos(0);
         ImGui::TextWrapped("%s", m->description.c_str());
         ImGui::PopTextWrapPos();
         ImGui::PopStyleColor();
@@ -178,20 +186,26 @@ namespace FilmLibrary
             GuiUtils::GoldSeparator();
             GuiUtils::SectionTitle("Актёры");
             ImGui::Dummy({0, 4});
+            
+            ImGui::PushTextWrapPos(0);
             for (int aid : m->actorIds)
             {
                 const Actor* a = ctrl.GetActorById(aid);
                 if (!a) continue;
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.58f, 0.22f, 1.0f));
                 char fbtn[256];
-                snprintf(fbtn, sizeof(fbtn), "  %s  ##ad%d", a->name.c_str(), aid);
+                snprintf(fbtn, sizeof(fbtn), " %s ##ad%d", a->name.c_str(), aid);
                 if (ImGui::SmallButton(fbtn))
                 {
-                    state.actorSelected = aid;
+                    if (state.actorSelected != aid) {
+                        state.actorSelected = aid;
+                        state.actorVisitCounter++;
+                    }
                     state.activeTab = 2;
                 }
                 ImGui::PopStyleColor();
             }
+            ImGui::PopTextWrapPos();
             ImGui::NewLine();
         }
     }
@@ -201,11 +215,12 @@ namespace FilmLibrary
         ImGui::Dummy({0, 6});
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.09f, 0.08f, 0.05f, 1.0f));
-        ImGui::BeginChild("##film_search_panel", {0, 52}, false);
-        ImGui::Dummy({0, 8});
+        ImGui::BeginChild("##film_search_panel", {0, 64}, false, ImGuiWindowFlags_NoScrollbar);
+
+        ImGui::SetCursorPos({24.0f, (64.0f - ImGui::GetFrameHeight()) * 0.5f});
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.32f);
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.35f);
         bool searchChanged = ImGui::InputText("##fsq", filmSearch, sizeof(filmSearch));
 
         ImGui::SameLine(0, 8);
@@ -219,6 +234,7 @@ namespace FilmLibrary
         ImGui::SameLine(0, 8);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.35f, 0.25f, 0.08f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.60f, 0.45f, 0.15f, 1.0f));
+        /*
         if (ImGui::Button("Найти", {70, 0}) || searchChanged)
         {
             std::string q(filmSearch);
@@ -231,6 +247,13 @@ namespace FilmLibrary
                 auto mode = static_cast<AppController::SearchMode>(filmSearchMode);
                 ctrl.PerformSearch(mode, q);
             }
+        }
+        */
+        if (searchChanged)
+        {
+            std::string q(filmSearch);
+            if (q.empty()) ctrl.ClearSearch();
+            else ctrl.PerformSearch(static_cast<AppController::SearchMode>(filmSearchMode), q);
         }
         ImGui::PopStyleColor(2);
 
@@ -269,6 +292,7 @@ namespace FilmLibrary
         ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.90f, 0.72f, 0.28f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(1.0f, 0.85f, 0.40f, 1.0f));
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(16, 16));
         if (ImGui::BeginPopup("##film_filters_popup"))
         {
             showFilters = true;
@@ -301,6 +325,7 @@ namespace FilmLibrary
                 ctrl.FilterByLengthRange(lengthRange[0], lengthRange[1]);
             }
 
+            ImGui::Dummy({0, 8});
             if (ImGui::Button("Очистить фильтры", {ImGui::GetContentRegionAvail().x, 0}))
             {
                 ratingRange[0] = 0.0f;
@@ -316,6 +341,7 @@ namespace FilmLibrary
         {
             showFilters = false;
         }
+        ImGui::PopStyleVar();
 
         ImGui::PopStyleColor(7);
 
@@ -338,11 +364,12 @@ namespace FilmLibrary
         GuiUtils::GoldSeparator();
 
         float totalH = ImGui::GetContentRegionAvail().y;
-        float listW = ImGui::GetContentRegionAvail().x * 0.48f;
+        float listW = ImGui::GetContentRegionAvail().x * 0.45f;
         float detailW = ImGui::GetContentRegionAvail().x - listW - 10;
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.08f, 0.08f, 0.10f, 1.0f));
-        ImGui::BeginChild("##film_list", {listW, totalH}, false, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(16, 16));
+        ImGui::BeginChild("##film_list", {listW, totalH}, ImGuiChildFlags_AlwaysUseWindowPadding, 0);
 
         const auto& movies = ctrl.GetDisplayMovies();
         if (movies.empty())
@@ -368,19 +395,24 @@ namespace FilmLibrary
             ImGui::SetCursorScreenPos(btnPos);
             if (ImGui::InvisibleButton("##row", {listW - 4, rowH}))
             {
-                state.filmSelected = m->id;
+                if (state.filmSelected != m->id) {
+                    state.filmSelected = m->id;
+                    state.filmVisitCounter++;
+                }
             }
 
             ImGui::PopID();
         }
 
         ImGui::EndChild();
+        ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
         ImGui::SameLine(0, 10);
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.09f, 0.09f, 0.11f, 1.0f));
-        ImGui::BeginChild("##film_detail", {detailW, totalH}, false, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(24, 24));
+        ImGui::BeginChild("##film_detail", {detailW, totalH}, ImGuiChildFlags_AlwaysUseWindowPadding, 0);
 
         if (!selectedMovie && state.filmSelected >= 0)
         {
@@ -390,6 +422,7 @@ namespace FilmLibrary
         RenderFilmDetail(selectedMovie, ctrl, state);
 
         ImGui::EndChild();
+        ImGui::PopStyleVar();
         ImGui::PopStyleColor();
     }
 }
