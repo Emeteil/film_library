@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     FilmLibrary::Logger::Instance().Init("logs/film_library.log");
     FilmLibrary::Logger::Instance().Info("Запуск приложения \"Фильмотека\"");
 
-    FilmLibrary::AppWindow appWindow("Фильмотека", 1280, 720);
+    FilmLibrary::AppWindow appWindow("Фильмотека", 1280, 760);
     if (!appWindow.Init())
     {
         FilmLibrary::Logger::Instance().Error("Не удалось инициализировать окно приложения.");

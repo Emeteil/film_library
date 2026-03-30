@@ -325,6 +325,18 @@ namespace FilmLibrary
                     return asc ? (a->name < b->name) : (a->name > b->name);
                 });
             }
+            else if (currentActorSortKey == SortKey::Rating)
+            {
+                QuickSort::Sort(displayActors, [asc = currentActorSortAscending](const Actor* a, const Actor* b) {
+                    return asc ? (a->birthdate < b->birthdate) : (a->birthdate > b->birthdate);
+                });
+            }
+            else if (currentActorSortKey == SortKey::Length)
+            {
+                QuickSort::Sort(displayActors, [asc = currentActorSortAscending](const Actor* a, const Actor* b) {
+                    return asc ? (a->filmIds.size() < b->filmIds.size()) : (a->filmIds.size() > b->filmIds.size());
+                });
+            }
         }
     }
 }
