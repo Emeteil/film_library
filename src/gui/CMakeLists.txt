@@ -18,6 +18,7 @@ add_library(film_library_gui STATIC
     widgets/GuiUtils.cpp
     widgets/MovieTableWidget.cpp
     widgets/MovieFormDialog.cpp
+    widgets/ActorFormDialog.cpp
     widgets/ConfirmDialog.cpp
     widgets/NotificationManager.cpp
 )

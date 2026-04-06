@@ -42,11 +42,15 @@ namespace FilmLibrary
 
             struct Notification
             {
+                uint32_t id;
                 NotificationType type;
                 std::string message;
+                float duration;
                 float remainingTime;
+                float currentY;
             };
 
             std::vector<Notification> notifications;
+            uint32_t nextId = 1;
     };
 }

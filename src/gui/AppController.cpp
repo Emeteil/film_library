@@ -7,6 +7,10 @@
 #include "core/algorithms/QuickSort.h"
 #include "core/algorithms/RabinKarp.h"
 
+#include <algorithm>
+#include <string>
+#include <vector>
+
 namespace FilmLibrary
 {
     AppController::AppController(const std::string& moviesCsvPath, const std::string& actorsCsvPath)
@@ -49,8 +53,17 @@ namespace FilmLibrary
 
     bool AppController::DeleteMovie(int id)
     {
+        for (auto& actor : actorManager.GetAllActors())
+        {
+            actor->filmIds.erase(id);
+        }
+        
         bool ok = dataManager.DeleteMovie(id);
-        if (ok) displayDirty = true;
+        if (ok)
+        {
+            displayDirty = true;
+            actorManager.SaveToCsv();
+        }
         return ok;
     }
 
@@ -110,8 +123,28 @@ namespace FilmLibrary
 
     bool AppController::DeleteActor(int id)
     {
+        const auto& allMovies = dataManager.GetAllMovies();
+        bool moviesChanged = false;
+        
+        for (const auto& movie : allMovies)
+        {
+            auto it = std::find(movie->actorIds.begin(), movie->actorIds.end(), id);
+            if (it != movie->actorIds.end())
+            {
+                movie->actorIds.erase(it);
+                moviesChanged = true;
+            }
+        }
+        
         bool ok = actorManager.DeleteActor(id);
-        if (ok) actorDisplayDirty = true;
+        if (ok)
+        {
+            actorDisplayDirty = true;
+            if (moviesChanged)
+            {
+                dataManager.SaveToCsv();
+            }
+        }
         return ok;
     }
 

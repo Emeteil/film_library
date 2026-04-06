@@ -124,13 +124,13 @@ namespace FilmLibrary
     bool ActorManager::DeleteActor(int id)
     {
         auto results = idIndex.Find(id);
-        
+
         if (results.empty())
         {
             Logger::Instance().Warning("Cannot delete actor: ID " + std::to_string(id) + " not found");
             return false;
         }
-        
+
         Actor* actorPtr = results[0];
         for (auto it = actors.begin(); it != actors.end(); ++it)
         {
@@ -142,7 +142,7 @@ namespace FilmLibrary
         }
         
         OnDataChanged();
-        
+
         Logger::Instance().Info("Deleted actor with ID: " + std::to_string(id));
         return true;
     }

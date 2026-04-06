@@ -11,34 +11,59 @@ namespace FilmLibrary
     void GuiUtils::DrawCoverPlaceholder(ImVec2 pos, ImVec2 size, const char* title)
     {
         ImDrawList* dl = ImGui::GetWindowDrawList();
-        ImVec2 p1 = {pos.x + size.x, pos.y + size.y};
-        dl->AddRectFilledMultiColor(pos, p1,
-            IM_COL32(25, 20, 10, 255), IM_COL32(18, 15, 8, 255),
-            IM_COL32(12, 10, 5, 255), IM_COL32(20, 16, 8, 255));
-        dl->AddRect(pos, p1, IM_COL32(90, 70, 25, 120), 4.0f, 0, 1.5f);
+        
+        ImVec2 oldCursor = ImGui::GetCursorPos();
 
+        ImVec2 p1 = {pos.x + size.x, pos.y + size.y};
+        
+        dl->AddRectFilledMultiColor(pos, p1,
+            IM_COL32(28, 28, 30, 255), IM_COL32(22, 22, 24, 255),
+            IM_COL32(18, 18, 20, 255), IM_COL32(14, 14, 15, 255));
+            
+        dl->AddRect(pos, p1, IM_COL32(140, 105, 35, 70), 8.0f, 0, 1.0f);
+        dl->AddLine({pos.x + 8, pos.y + 1}, {pos.x + size.x - 8, pos.y + 1}, IM_COL32(255, 255, 255, 25), 2.0f);
+
+        float iconW = size.x * 0.22f;
+        float iconH = iconW * 1.4f;
         float cx = pos.x + size.x * 0.5f;
-        float cy = pos.y + size.y * 0.42f;
-        float r = std::min(size.x, size.y) * 0.18f;
-        dl->AddCircle({cx, cy}, r, IM_COL32(90, 70, 25, 160), 32, 1.5f);
-        dl->AddCircle({cx, cy}, r * 0.45f, IM_COL32(90, 70, 25, 160), 32, 1.0f);
-        for (int i = 0; i < 6; ++i)
+        float cy = pos.y + size.y * 0.40f;
+        float ix = cx - iconW * 0.5f;
+        float iy = cy - iconH * 0.5f;
+
+        dl->AddRectFilled({ix, iy}, {ix + iconW, iy + iconH}, IM_COL32(160, 130, 60, 150), 3.0f);
+        dl->AddRectFilled({ix + 3, iy + 3}, {ix + iconW - 3, iy + iconH - 3}, IM_COL32(20, 20, 20, 255), 1.0f);
+        
+        int holes = 6;
+        float holeGap = iconH / (float)holes;
+        float holeH = holeGap * 0.4f;
+        for (int i = 0; i < holes; ++i)
         {
-            float a = (float)i / 6.0f * 6.2832f;
-            float x1 = cx + cosf(a) * r * 0.6f;
-            float y1 = cy + sinf(a) * r * 0.6f;
-            float x2 = cx + cosf(a) * r * 0.85f;
-            float y2 = cy + sinf(a) * r * 0.85f;
-            dl->AddLine({x1, y1}, {x2, y2}, IM_COL32(90, 70, 25, 160), 1.0f);
+            float y = iy + holeGap * i + (holeGap - holeH) * 0.5f;
+            dl->AddRectFilled({ix + 1, y}, {ix + 3, y + holeH}, IM_COL32(20, 20, 20, 255));
+            dl->AddRectFilled({ix + iconW - 3, y}, {ix + iconW - 1, y + holeH}, IM_COL32(20, 20, 20, 255));
         }
 
-        float textY = pos.y + size.y * 0.72f;
-        ImGui::SetCursorScreenPos({pos.x + 6, textY});
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.75f, 0.58f, 0.22f, 0.80f));
-        ImGui::PushTextWrapPos(pos.x + size.x - 6);
-        ImGui::TextWrapped("%s", title ? title : "");
-        ImGui::PopTextWrapPos();
-        ImGui::PopStyleColor();
+        dl->AddLine({ix + 5, cy}, {ix + iconW - 5, cy}, IM_COL32(160, 130, 60, 60), 1.0f);
+        dl->AddCircle({cx, cy}, iconW * 0.15f, IM_COL32(160, 130, 60, 80), 12, 1.0f);
+
+        const char* noCoverStr = "Нет обложки";
+        ImVec2 tsz1 = ImGui::CalcTextSize(noCoverStr);
+        dl->AddText({cx - tsz1.x * 0.5f, cy + iconH * 0.5f + 16.0f}, IM_COL32(150, 150, 150, 200), noCoverStr);
+
+        if (title && title[0] != '\0')
+        {
+            float textY = cy + iconH * 0.5f + 40.0f;
+            ImGui::SetCursorScreenPos({pos.x + 15.0f, textY});
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.40f, 0.40f, 0.40f, 0.90f));
+            ImGui::PushTextWrapPos(pos.x + size.x - 15.0f);
+            
+            ImGui::TextWrapped("%s", title);
+            
+            ImGui::PopTextWrapPos();
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::SetCursorPos(oldCursor);
     }
 
     void GuiUtils::GoldSeparator()

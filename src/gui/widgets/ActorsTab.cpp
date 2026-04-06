@@ -1,6 +1,7 @@
 #include "gui/widgets/ActorsTab.h"
 #include "gui/widgets/GuiUtils.h"
 #include "gui/widgets/MainWidget.h"
+#include "gui/widgets/NotificationManager.h"
 #include "gui/Style.h"
 #include "gui/ImageLoader.h"
 #include <imgui.h>
@@ -10,6 +11,64 @@
 
 namespace FilmLibrary
 {
+    void ActorsTab::HandleActorSubmit(const Actor& actor, AppController& ctrl, MainWidgetState& state)
+    {
+        if (actor.id >= 0)
+        {
+            bool ok = ctrl.UpdateActor(actor.id, actor);
+            if (ok)
+            {
+                NotificationManager::Instance().Push(
+                    NotificationType::Success, "Актёр '" + actor.name + "' обновлён");
+            }
+            else
+            {
+                NotificationManager::Instance().Push(
+                    NotificationType::Error, "Ошибка при обновлении актёра");
+            }
+        }
+        else
+        {
+            Actor newActor = actor;
+            int newId = ctrl.AddActor(std::move(newActor));
+            if (newId > 0)
+            {
+                state.actorSelected = newId;
+                NotificationManager::Instance().Push(
+                    NotificationType::Success, "Актёр '" + actor.name + "' добавлен");
+            }
+            else
+            {
+                NotificationManager::Instance().Push(
+                    NotificationType::Error, "Ошибка при добавлении актёра");
+            }
+        }
+    }
+
+    void ActorsTab::HandleActorDelete(int actorId, AppController& ctrl, MainWidgetState& state)
+    {
+        const Actor* actor = ctrl.GetActorById(actorId);
+        if (!actor) return;
+
+        std::string name = actor->name;
+        bool ok = ctrl.DeleteActor(actorId);
+        
+        if (ok)
+        {
+            if (state.actorSelected == actorId)
+            {
+                state.actorSelected = -1;
+            }
+            NotificationManager::Instance().Push(
+                NotificationType::Success, "Актёр '" + name + "' удалён");
+        }
+        else
+        {
+            NotificationManager::Instance().Push(
+                NotificationType::Error, "Ошибка при удалении актёра");
+        }
+    }
+
     void ActorsTab::RenderActorRow(const Actor* a, bool selected)
     {
         ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -201,6 +260,42 @@ namespace FilmLibrary
             ImGui::PopTextWrapPos();
             ImGui::NewLine();
         }
+
+        ImGui::Dummy({0, 16});
+        GuiUtils::GoldSeparator();
+        ImGui::Dummy({0, 8});
+
+        float btnW = 130.0f;
+        float totalBtnW = btnW * 2 + 12;
+        float btnX = (ImGui::GetContentRegionAvail().x - totalBtnW) * 0.5f;
+        ImGui::SetCursorPosX(btnX);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.35f, 0.25f, 0.08f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.60f, 0.45f, 0.15f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.75f, 0.56f, 0.18f, 1.0f));
+        if (ImGui::Button("Редактировать", {btnW, 34}))
+        {
+            actorFormDialog.OpenForEdit(*a);
+            actorFormDialog.SetOnSubmit([&ctrl, this, &state](const Actor& actor) {
+                HandleActorSubmit(actor, ctrl, state);
+            });
+        }
+        ImGui::PopStyleColor(3);
+
+        ImGui::SameLine(0, 12);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.50f, 0.15f, 0.10f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.72f, 0.22f, 0.14f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.85f, 0.28f, 0.18f, 1.0f));
+        if (ImGui::Button("Удалить", {btnW, 34}))
+        {
+            confirmDialog.Show("Удалить актёра", 
+                "Вы уверены, что хотите удалить актёра '" + a->name + "'?",
+                [&ctrl, this, &state, actorId = a->id]() {
+                    HandleActorDelete(actorId, ctrl, state);
+                });
+        }
+        ImGui::PopStyleColor(3);
     }
 
     void ActorsTab::Render(AppController& ctrl, MainWidgetState& state)
@@ -273,6 +368,19 @@ namespace FilmLibrary
             ctrl.ClearActorSort();
         }
 
+        ImGui::SameLine(0, 16);
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.35f, 0.25f, 0.08f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.60f, 0.45f, 0.15f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.75f, 0.56f, 0.18f, 1.0f));
+        if (ImGui::Button("Добавить актёра", {140, 0}))
+        {
+            actorFormDialog.OpenForAdd();
+            actorFormDialog.SetOnSubmit([&ctrl, this, &state](const Actor& actor) {
+                HandleActorSubmit(actor, ctrl, state);
+            });
+        }
+        ImGui::PopStyleColor(3);
+
         ImGui::PopStyleVar();
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -340,5 +448,8 @@ namespace FilmLibrary
         ImGui::EndChild();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
+
+        actorFormDialog.Render();
+        confirmDialog.Render();
     }
 }

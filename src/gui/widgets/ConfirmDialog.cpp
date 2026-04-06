@@ -18,7 +18,6 @@ namespace FilmLibrary
         dialogMessage = message;
         onConfirm     = std::move(cb);
         isOpen        = true;
-        ImGui::OpenPopup(dialogTitle.c_str());
     }
 
     bool ConfirmDialog::IsOpen() const { return isOpen; }
@@ -26,9 +25,9 @@ namespace FilmLibrary
     void ConfirmDialog::Render()
     {
         if (!isOpen) return;
+\
+        ImGui::OpenPopup(dialogTitle.c_str());
 
-        // Dim overlay
-        ImGui::SetNextWindowBgAlpha(0.0f);
         ImVec2 center = ImGui::GetIO().DisplaySize;
         center.x *= 0.5f;
         center.y *= 0.5f;
@@ -50,7 +49,7 @@ namespace FilmLibrary
             // Иконка предупреждения
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.90f, 0.65f, 0.20f, 1.0f));
             ImGui::SetWindowFontScale(1.6f);
-            ImGui::Text("⚠");
+            ImGui::Text("!");
             ImGui::SetWindowFontScale(1.0f);
             ImGui::PopStyleColor();
 

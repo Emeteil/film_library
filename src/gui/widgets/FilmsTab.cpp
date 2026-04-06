@@ -1,6 +1,7 @@
 #include "gui/widgets/FilmsTab.h"
 #include "gui/widgets/GuiUtils.h"
 #include "gui/widgets/MainWidget.h"
+#include "gui/widgets/NotificationManager.h"
 #include "gui/Style.h"
 #include "gui/ImageLoader.h"
 #include <imgui.h>
@@ -10,6 +11,64 @@
 
 namespace FilmLibrary
 {
+    void FilmsTab::HandleMovieSubmit(const Movie& movie, AppController& ctrl, MainWidgetState& state)
+    {
+        if (movie.id >= 0)
+        {
+            bool ok = ctrl.UpdateMovie(movie.id, movie);
+            if (ok)
+            {
+                NotificationManager::Instance().Push(
+                    NotificationType::Success, "Фильм '" + movie.title + "' обновлён");
+            }
+            else
+            {
+                NotificationManager::Instance().Push(
+                    NotificationType::Error, "Ошибка при обновждении фильма");
+            }
+        }
+        else
+        {
+            Movie newMovie = movie;
+            int newId = ctrl.AddMovie(std::move(newMovie));
+            if (newId > 0)
+            {
+                state.filmSelected = newId;
+                NotificationManager::Instance().Push(
+                    NotificationType::Success, "Фильм '" + movie.title + "' добавлен");
+            }
+            else
+            {
+                NotificationManager::Instance().Push(
+                    NotificationType::Error, "Ошибка при добавлении фильма");
+            }
+        }
+    }
+
+    void FilmsTab::HandleMovieDelete(int movieId, AppController& ctrl, MainWidgetState& state)
+    {
+        const Movie* movie = ctrl.GetMovieById(movieId);
+        if (!movie) return;
+
+        std::string title = movie->title;
+        bool ok = ctrl.DeleteMovie(movieId);
+        
+        if (ok)
+        {
+            if (state.filmSelected == movieId)
+            {
+                state.filmSelected = -1;
+            }
+            NotificationManager::Instance().Push(
+                NotificationType::Success, "Фильм '" + title + "' удалён");
+        }
+        else
+        {
+            NotificationManager::Instance().Push(
+                NotificationType::Error, "Ошибка при удалении фильма");
+        }
+    }
+
     void FilmsTab::RenderFilmSearchRow(const Movie* m, bool selected)
     {
         ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -186,7 +245,7 @@ namespace FilmLibrary
             GuiUtils::GoldSeparator();
             GuiUtils::SectionTitle("Актёры");
             ImGui::Dummy({0, 4});
-            
+
             ImGui::PushTextWrapPos(0);
             for (int aid : m->actorIds)
             {
@@ -208,6 +267,45 @@ namespace FilmLibrary
             ImGui::PopTextWrapPos();
             ImGui::NewLine();
         }
+
+        ImGui::Dummy({0, 16});
+        GuiUtils::GoldSeparator();
+        ImGui::Dummy({0, 8});
+
+        float btnW = 130.0f;
+        float totalBtnW = btnW * 2 + 12;
+        float btnX = (ImGui::GetContentRegionAvail().x - totalBtnW) * 0.5f;
+        ImGui::SetCursorPosX(btnX);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.35f, 0.25f, 0.08f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.60f, 0.45f, 0.15f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.75f, 0.56f, 0.18f, 1.0f));
+        if (ImGui::Button("Редактировать", {btnW, 34}))
+        {
+            movieFormDialog.OpenForEdit(*m, ctrl.GetAllActors());
+            movieFormDialog.SetOnSubmit([&ctrl, this, &state](const Movie& movie) {
+                HandleMovieSubmit(movie, ctrl, state);
+            });
+            movieFormDialog.SetOnAddActor([&ctrl](const Actor& actor) {
+                return ctrl.AddActor(Actor(actor));
+            });
+        }
+        ImGui::PopStyleColor(3);
+
+        ImGui::SameLine(0, 12);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.50f, 0.15f, 0.10f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.72f, 0.22f, 0.14f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.85f, 0.28f, 0.18f, 1.0f));
+        if (ImGui::Button("Удалить", {btnW, 34}))
+        {
+            confirmDialog.Show("Удалить фильм", 
+                "Вы уверены, что хотите удалить фильм '" + m->title + "'?",
+                [&ctrl, this, &state, movieId = m->id]() {
+                    HandleMovieDelete(movieId, ctrl, state);
+                });
+        }
+        ImGui::PopStyleColor(3);
     }
 
     void FilmsTab::Render(AppController& ctrl, MainWidgetState& state)
@@ -357,6 +455,22 @@ namespace FilmLibrary
             ctrl.ClearFilter();
         }
 
+        ImGui::SameLine(0, 16);
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.35f, 0.25f, 0.08f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.60f, 0.45f, 0.15f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.75f, 0.56f, 0.18f, 1.0f));
+        if (ImGui::Button("Добавить фильм", {140, 0}))
+        {
+            movieFormDialog.OpenForAdd();
+            movieFormDialog.SetOnSubmit([&ctrl, this, &state](const Movie& movie) {
+                HandleMovieSubmit(movie, ctrl, state);
+            });
+            movieFormDialog.SetOnAddActor([&ctrl](const Actor& actor) {
+                return ctrl.AddActor(Actor(actor));
+            });
+        }
+        ImGui::PopStyleColor(3);
+
         ImGui::PopStyleVar();
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -424,5 +538,10 @@ namespace FilmLibrary
         ImGui::EndChild();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+        movieFormDialog.Render(ctrl.GetAllActors());
+        confirmDialog.Render();
+        ImGui::PopStyleVar();
     }
 }
