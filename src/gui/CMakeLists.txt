@@ -3,9 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(APPLE)
-    add_definitions(-DGL_SILENCE_DEPRECATION)
-endif()
+# if(APPLE)
+add_definitions(-DGL_SILENCE_DEPRECATION)
+# endif()
 
 add_library(film_library_gui STATIC
     AppWindow.cpp
